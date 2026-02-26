@@ -13,49 +13,63 @@
 --blue:#3b82f6;
 --red:#ef4444;
 }
-
 body{
 margin:0;
 font-family:Segoe UI,sans-serif;
 background:linear-gradient(135deg,#fef9c3,#bbf7d0);
 color:#064e3b;
-overflow-x:hidden;
-position:relative;
 }
-
-/* Animated leaves */
-body::before{
-content:"🍃 🍂 🍃 🍂 🍃 🍂 🍃 🍂 🍃 🍂 🍃 🍂";
+.login-screen{
 position:fixed;
-top:-40px;
-left:0;
-width:200%;
-font-size:40px;
-opacity:0.15;
-animation:leafMove 50s linear infinite;
-pointer-events:none;
+inset:0;
+display:flex;
+align-items:center;
+justify-content:center;
+background:linear-gradient(135deg,#fef9c3,#bbf7d0);
+z-index:9999;
 }
-@keyframes leafMove{
-0%{transform:translateX(0);}
-100%{transform:translateX(-50%);}
-}
-
-.header{
+.login-box{
+background:white;
+padding:40px;
+border-radius:15px;
+box-shadow:0 10px 30px rgba(0,0,0,0.2);
 text-align:center;
+}
+.login-box input{
+padding:10px;
+border-radius:8px;
+border:1px solid #ccc;
+width:250px;
+}
+.login-box button{
+padding:10px 20px;
+margin-top:15px;
+background:var(--green);
+color:white;
+border:none;
+border-radius:8px;
+cursor:pointer;
+}
+.header{
+display:flex;
+justify-content:center;
+align-items:center;
+gap:15px;
 padding:20px;
-font-size:30px;
+font-size:26px;
 font-weight:bold;
 background:linear-gradient(90deg,var(--green),var(--yellow));
 color:white;
-letter-spacing:2px;
 }
-
+.lock-btn{
+cursor:pointer;
+font-size:22px;
+}
 .container{
 width:95%;
 max-width:1200px;
 margin:20px auto 420px auto;
 }
-
 .card{
 background:white;
 padding:20px;
@@ -63,41 +77,34 @@ border-radius:15px;
 margin-bottom:20px;
 box-shadow:0 10px 25px rgba(0,0,0,0.1);
 }
-
 input,select,button{
 padding:8px;
 margin:5px;
 border-radius:8px;
 border:1px solid #d1fae5;
 }
-
 button{
 cursor:pointer;
 font-weight:bold;
 border:none;
 }
-
 .btn{background:var(--green);color:white;}
 .sell{background:var(--blue);color:white;}
 .reset{background:var(--red);color:white;}
-
 table{
 width:100%;
 border-collapse:collapse;
 }
-
 th,td{
 padding:8px;
 border-bottom:1px solid #d1fae5;
 text-align:center;
 }
-
 .dashboard{
 display:flex;
 gap:20px;
 flex-wrap:wrap;
 }
-
 .stat{
 flex:1;
 background:#dcfce7;
@@ -105,7 +112,6 @@ padding:15px;
 border-radius:12px;
 text-align:center;
 }
-
 .receipt-panel{
 position:fixed;
 bottom:0;
@@ -120,7 +126,6 @@ max-height:400px;
 overflow:auto;
 display:none;
 }
-
 .close-btn{
 position:absolute;
 right:10px;
@@ -128,17 +133,28 @@ top:8px;
 cursor:pointer;
 font-weight:bold;
 }
-
-.logo{text-align:center;}
-.lion{font-size:30px;}
-.line{border-top:1px dashed black;margin:6px 0;}
-#qrcode{display:flex;justify-content:center;margin-top:10px;}
 </style>
 </head>
 
 <body>
 
-<div class="header">🏪 ASADSHOH SHOP 101</div>
+<!-- LOGIN -->
+<div class="login-screen" id="loginScreen">
+<div class="login-box">
+<h2>🔐 Kirish</h2>
+<input type="password" id="loginPass" placeholder="Parol">
+<br>
+<button onclick="login()">Kirish</button>
+<p id="loginError" style="color:red;"></p>
+</div>
+</div>
+
+<div id="app" style="display:none;">
+
+<div class="header">
+🏪 ASADSHOH SHOP 101
+<span class="lock-btn" onclick="lockApp()">🔒</span>
+</div>
 
 <div class="container">
 
@@ -147,7 +163,7 @@ font-weight:bold;
 <input id="name" placeholder="Tovar nomi">
 <input id="size" placeholder="Razmer">
 <input id="qty" type="number" placeholder="Soni">
-<input id="price" type="number" placeholder="Narxi">
+<input id="price" type="number" placeholder="Narxi (so‘m)">
 <button class="btn" id="addBtn">Qo‘shish</button>
 </div>
 
@@ -160,19 +176,17 @@ font-weight:bold;
 
 <div class="card dashboard">
 <div class="stat">
-<h3>📅 Bugungi savdo</h3>
-Summa: <span id="todaySum">0</span><br>
-Dona: <span id="todayQty">0</span>
+<h3>📅 Bugungi</h3>
+<span id="todaySum">0 so‘m</span>
 </div>
 <div class="stat">
-<h3>📊 Umumiy savdo</h3>
-Summa: <span id="totalSum">0</span><br>
-Dona: <span id="totalQty">0</span>
+<h3>📊 Umumiy</h3>
+<span id="totalSum">0 so‘m</span>
 </div>
 </div>
 
 <div class="card">
-<button class="reset" onclick="store.resetReport()">Hisobotni reset qilish</button>
+<button class="reset" onclick="store.resetReport()">Hisobotni reset</button>
 </div>
 
 <div class="card">
@@ -192,15 +206,36 @@ Dona: <span id="totalQty">0</span>
 </div>
 
 </div>
+</div>
 
 <div class="receipt-panel" id="receiptPanel"></div>
 
 <script>
+
+function login(){
+if(loginPass.value==="Asad2004@"){
+loginScreen.style.display="none";
+app.style.display="block";
+}else{
+loginError.innerText="Parol noto‘g‘ri!";
+}
+}
+
+function lockApp(){
+app.style.display="none";
+loginScreen.style.display="flex";
+loginPass.value="";
+}
+
 class POS{
 constructor(){
 this.products=JSON.parse(localStorage.getItem("products"))||[];
 this.receipts=JSON.parse(localStorage.getItem("receipts"))||[];
 this.init();
+}
+
+formatMoney(num){
+return num.toLocaleString('uz-UZ')+" so‘m";
 }
 
 init(){
@@ -224,34 +259,34 @@ localStorage.setItem("receipts",JSON.stringify(this.receipts));
 }
 
 addProduct(){
-const name=nameInput.value.trim();
-const size=sizeInput.value.trim();
-const qty=parseInt(qtyInput.value);
-const price=parseInt(priceInput.value);
-if(!name||!size||!qty||!price) return alert("To‘liq kiriting");
-this.products.push({id:Date.now(),name,size,qty,price});
+if(!name.value||!size.value||!qty.value||!price.value) return alert("To‘liq kiriting");
+this.products.push({
+id:Date.now(),
+name:name.value,
+size:size.value,
+qty:parseInt(qty.value),
+price:parseInt(price.value)
+});
 this.save();
 this.render();
 }
 
 sellProduct(){
 const id=parseInt(sellSelect.value);
-const qty=parseInt(sellQty.value);
+const qtyVal=parseInt(sellQty.value);
 const product=this.products.find(p=>p.id===id);
-if(!product||qty<=0||product.qty<qty) return alert("Xato yoki yetarli emas");
+if(!product||qtyVal<=0||product.qty<qtyVal) return alert("Yetarli emas");
 
-product.qty-=qty;
-const total=qty*product.price;
-const now=new Date();
+product.qty-=qtyVal;
+const total=qtyVal*product.price;
 
 const receipt={
 id:"R"+Date.now(),
 name:product.name,
 size:product.size,
-qty,
+qty:qtyVal,
 total,
-date:now.toLocaleString(),
-raw:now.toISOString()
+date:new Date().toLocaleString()
 };
 
 this.receipts.unshift(receipt);
@@ -264,33 +299,23 @@ showReceipt(r){
 receiptPanel.style.display="block";
 receiptPanel.innerHTML=`
 <div style="position:relative">
-<div class="close-btn" onclick="store.closeReceipt()">❌</div>
-<div class="logo">
-<div class="lion">🦁</div>
-<b>ASADSHOH SHOP 101</b><br>
-📞 +998 99 086 75 05
-</div>
-<div class="line"></div>
-Chek ID: ${r.id}<br>
+<div class="close-btn" onclick="receiptPanel.style.display='none'">❌</div>
+<div class="close-btn" style="right:40px;" onclick="lockApp()">🔒</div>
+🦁 ASADSHOH SHOP 101<br>
+📞 +998 99 086 75 05<br>
+<hr>
 ${r.name} (${r.size})<br>
 ${r.qty} dona<br>
-<div class="line"></div>
-<b>JAMI: ${r.total} so‘m</b><br>
+<b>${this.formatMoney(r.total)}</b><br>
 ${r.date}
 <div id="qrcode"></div>
-<div class="line"></div>
-<center>Rahmat!</center>
 </div>
 `;
 document.getElementById("qrcode").innerHTML="";
 new QRCode(document.getElementById("qrcode"),{
-text:`ASADSHOH SHOP 101 | ${r.id} | ${r.total} so‘m`,
+text:r.id+" "+r.total,
 width:100,height:100
 });
-}
-
-closeReceipt(){
-receiptPanel.style.display="none";
 }
 
 render(){
@@ -299,8 +324,8 @@ this.products.forEach(p=>{
 if(p.qty>0)
 sellSelect.innerHTML+=`<option value="${p.id}">${p.name} (${p.size}) - ${p.qty}</option>`;
 });
-this.renderReceipts();
 this.updateStats();
+this.renderReceipts();
 }
 
 renderReceipts(filter=""){
@@ -312,54 +337,52 @@ receiptTable.innerHTML+=`
 <tr>
 <td>${r.id}</td>
 <td>${r.date}</td>
-<td>${r.total}</td>
+<td>${this.formatMoney(r.total)}</td>
 <td><button onclick='store.showReceipt(${JSON.stringify(r)})'>Ko‘rish</button></td>
 </tr>`;
 });
 }
 
 updateStats(){
-let todaySum=0,todayQty=0,totalSum=0,totalQty=0;
-const today=new Date().toDateString();
+let total=0;
+let today=0;
+const todayDate=new Date().toDateString();
 
 this.receipts.forEach(r=>{
-totalSum+=r.total;
-totalQty+=r.qty;
-if(new Date(r.raw).toDateString()===today){
-todaySum+=r.total;
-todayQty+=r.qty;
+total+=r.total;
+if(new Date(r.date).toDateString()===todayDate){
+today+=r.total;
 }
 });
 
-document.getElementById("todaySum").innerText=todaySum;
-document.getElementById("todayQty").innerText=todayQty;
-document.getElementById("totalSum").innerText=totalSum;
-document.getElementById("totalQty").innerText=totalQty;
+totalSum.innerText=this.formatMoney(total);
+todaySum.innerText=this.formatMoney(today);
 }
 
 resetReport(){
-const pass=prompt("Admin parol:");
-if(pass!=="101") return alert("Parol noto‘g‘ri!");
-if(!confirm("Hamma savdo hisobotlari o‘chadi!")) return;
+if(prompt("Admin parol")!=="101") return alert("Xato");
 this.receipts=[];
-localStorage.setItem("receipts",JSON.stringify(this.receipts));
+this.save();
 this.render();
 }
 }
 
-const nameInput=document.getElementById("name");
-const sizeInput=document.getElementById("size");
-const qtyInput=document.getElementById("qty");
-const priceInput=document.getElementById("price");
+const name=document.getElementById("name");
+const size=document.getElementById("size");
+const qty=document.getElementById("qty");
+const price=document.getElementById("price");
 const sellSelect=document.getElementById("sellSelect");
 const sellQty=document.getElementById("sellQty");
 const receiptPanel=document.getElementById("receiptPanel");
 const receiptTable=document.getElementById("receiptTable");
 const searchInput=document.getElementById("searchInput");
+const totalSum=document.getElementById("totalSum");
+const todaySum=document.getElementById("todaySum");
 const addBtn=document.getElementById("addBtn");
 const sellBtn=document.getElementById("sellBtn");
 
 const store=new POS();
+
 </script>
 
 </body>
