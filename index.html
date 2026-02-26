@@ -4,74 +4,95 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Asadshoh Market POS</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
 <style>
+:root{
+--bg:#0f172a;
+--card:#1e293b;
+--green:#22c55e;
+--blue:#3b82f6;
+--red:#ef4444;
+}
 body{
-    margin:0;
-    font-family:Segoe UI, sans-serif;
-    background:#0f172a;
-    color:white;
+margin:0;
+font-family:Segoe UI,sans-serif;
+background:var(--bg);
+color:white;
 }
 .container{
-    width:95%;
-    max-width:1200px;
-    margin:20px auto;
+width:95%;
+max-width:1300px;
+margin:20px auto 420px auto;
 }
 .card{
-    background:#1e293b;
-    padding:20px;
-    border-radius:10px;
-    margin-bottom:20px;
+background:var(--card);
+padding:20px;
+border-radius:10px;
+margin-bottom:20px;
 }
-h2{margin-top:0;}
-input,button,select{
-    padding:8px;
-    margin:5px;
-    border-radius:6px;
-    border:none;
+input,select,button{
+padding:8px;
+margin:5px;
+border-radius:6px;
+border:none;
 }
 button{
-    cursor:pointer;
-    font-weight:bold;
-    background:#22c55e;
+cursor:pointer;
+font-weight:bold;
 }
-button.sell{background:#3b82f6;}
+.btn{background:var(--green);}
+.sell{background:var(--blue);}
+.reset{background:var(--red);color:white;}
 table{
-    width:100%;
-    border-collapse:collapse;
+width:100%;
+border-collapse:collapse;
 }
 th,td{
-    padding:6px;
-    border-bottom:1px solid #334155;
-    text-align:center;
+padding:6px;
+border-bottom:1px solid #334155;
+text-align:center;
 }
 .dashboard{
-    display:flex;
-    gap:20px;
-    flex-wrap:wrap;
+display:flex;
+gap:20px;
+flex-wrap:wrap;
 }
 .stat{
-    background:#111827;
-    padding:15px;
-    border-radius:8px;
-    flex:1;
-    text-align:center;
+flex:1;
+background:#111827;
+padding:15px;
+border-radius:8px;
+text-align:center;
 }
-.receipt{
-    background:white;
-    color:black;
-    width:300px;
-    padding:15px;
-    font-family:Courier New, monospace;
-    display:none;
+.receipt-panel{
+position:fixed;
+bottom:0;
+left:0;
+right:0;
+background:white;
+color:black;
+padding:15px;
+font-family:Courier New,monospace;
+border-top:4px solid var(--green);
+max-height:400px;
+overflow:auto;
+display:none;
 }
-@media print{
-    body *{visibility:hidden;}
-    .receipt, .receipt *{visibility:visible;}
-    .receipt{position:absolute;left:0;top:0;}
+.close-btn{
+position:absolute;
+right:10px;
+top:8px;
+cursor:pointer;
+font-weight:bold;
 }
+.logo{text-align:center;}
+.lion{font-size:28px;}
+.line{border-top:1px dashed black;margin:6px 0;}
+#qrcode{display:flex;justify-content:center;margin-top:10px;}
 </style>
 </head>
+
 <body>
 
 <div class="container">
@@ -82,14 +103,14 @@ th,td{
 <input id="size" placeholder="Razmer">
 <input id="qty" type="number" placeholder="Soni">
 <input id="price" type="number" placeholder="Narxi">
-<button onclick="store.add()">Qo‘shish</button>
+<button class="btn" id="addBtn">Qo‘shish</button>
 </div>
 
 <div class="card">
 <h2>🛒 Sotish</h2>
 <select id="sellSelect"></select>
 <input id="sellQty" type="number" placeholder="Soni">
-<button class="sell" onclick="store.sell()">Sotish</button>
+<button class="sell" id="sellBtn">Sotish</button>
 </div>
 
 <div class="card dashboard">
@@ -106,14 +127,18 @@ Dona: <span id="totalQty">0</span>
 </div>
 
 <div class="card">
-<h2>🧾 Cheklar arxivi</h2>
+<button class="reset" onclick="store.resetSales()">Hisobotni reset qilish</button>
+</div>
+
+<div class="card">
+<h2>🧾 Cheklar Arxivi</h2>
+<input id="searchInput" placeholder="Chek ID qidirish">
 <table>
 <thead>
 <tr>
 <th>ID</th>
 <th>Sana</th>
 <th>Summa</th>
-<th>Dona</th>
 <th>Ko‘rish</th>
 </tr>
 </thead>
@@ -121,116 +146,175 @@ Dona: <span id="totalQty">0</span>
 </table>
 </div>
 
-<div class="receipt" id="receipt"></div>
-
 </div>
+
+<div class="receipt-panel" id="receiptPanel"></div>
 
 <script>
 
-class MarketPOS{
+class POS{
 
 constructor(){
-    this.products=JSON.parse(localStorage.getItem("products"))||[];
-    this.receipts=JSON.parse(localStorage.getItem("receipts"))||[];
-    this.render();
+this.products=JSON.parse(localStorage.getItem("products"))||[];
+this.receipts=JSON.parse(localStorage.getItem("receipts"))||[];
+this.init();
+}
+
+init(){
+addBtn.onclick=()=>this.addProduct();
+sellBtn.onclick=()=>this.sellProduct();
+searchInput.oninput=()=>this.renderReceipts(searchInput.value);
+
+document.addEventListener("keydown",(e)=>{
+if(e.key==="Enter"){
+if(document.activeElement.id==="sellQty") this.sellProduct();
+else this.addProduct();
+}
+});
+
+this.render();
 }
 
 save(){
-    localStorage.setItem("products",JSON.stringify(this.products));
-    localStorage.setItem("receipts",JSON.stringify(this.receipts));
+localStorage.setItem("products",JSON.stringify(this.products));
+localStorage.setItem("receipts",JSON.stringify(this.receipts));
 }
 
-add(){
-    const name=nameInput.value.trim();
-    const size=sizeInput.value.trim();
-    const qty=parseInt(qtyInput.value);
-    const price=parseInt(priceInput.value);
-    if(!name||!size||!qty||!price) return alert("To‘liq kiriting");
-    this.products.push({id:Date.now(),name,size,qty,price});
-    this.save();
-    this.render();
+addProduct(){
+const name=nameInput.value.trim();
+const size=sizeInput.value.trim();
+const qty=parseInt(qtyInput.value);
+const price=parseInt(priceInput.value);
+
+if(!name||!size||!qty||!price) return alert("To‘liq kiriting");
+
+this.products.push({id:Date.now(),name,size,qty,price});
+this.save();
+this.render();
 }
 
-sell(){
-    const id=parseInt(sellSelect.value);
-    const qty=parseInt(sellQty.value);
-    const product=this.products.find(p=>p.id===id);
-    if(!product||qty<=0) return alert("Xato");
-    if(product.qty<qty) return alert("Yetarli emas");
-    product.qty-=qty;
-    const total=qty*product.price;
-    const now=new Date();
-    const receipt={
-        id:"R"+Date.now(),
-        name:product.name,
-        size:product.size,
-        qty,
-        price:product.price,
-        total,
-        date:now.toLocaleString(),
-        raw:now.toISOString()
-    };
-    this.receipts.unshift(receipt);
-    this.save();
-    this.render();
-    this.print(receipt);
+sellProduct(){
+const id=parseInt(sellSelect.value);
+const qty=parseInt(sellQty.value);
+const product=this.products.find(p=>p.id===id);
+
+if(!product||qty<=0||product.qty<qty) return alert("Xato yoki yetarli emas");
+
+product.qty-=qty;
+
+const total=qty*product.price;
+const now=new Date();
+
+const receipt={
+id:"R"+Date.now(),
+name:product.name,
+size:product.size,
+qty,
+total,
+date:now.toLocaleString(),
+raw:now.toISOString()
+};
+
+this.receipts.unshift(receipt);
+this.save();
+this.render();
+this.showReceipt(receipt);
 }
 
-print(r){
-    const box=document.getElementById("receipt");
-    box.style.display="block";
-    box.innerHTML=`
-    <center>
-    <b>ASADSHOH MARKET</b><br>
-    101-do‘kon<br>
-    Murojaat uchun tel:<br>
-    +998 99 086 75 05<br>
-    --------------------------</center>
-    Chek ID: ${r.id}<br>
-    ${r.name} (${r.size})<br>
-    ${r.qty} x ${r.price}<br>
-    --------------------------<br>
-    JAMI: <b>${r.total} so‘m</b><br>
-    Sotilgan dona: ${r.qty}<br>
-    --------------------------<br>
-    ${r.date}<br>
-    <center>Rahmat!</center>
-    <br><button onclick="window.print()">🖨 Chop</button>
-    `;
+showReceipt(r){
+receiptPanel.style.display="block";
+receiptPanel.innerHTML=`
+<div style="position:relative">
+<div class="close-btn" onclick="store.closeReceipt()">❌</div>
+
+<div class="logo">
+<div class="lion">🦁</div>
+<b>ASADSHOH MARKET</b><br>
+101-do‘kon<br>
+📞 +998 99 086 75 05
+</div>
+
+<div class="line"></div>
+Chek ID: ${r.id}<br>
+${r.name} (${r.size})<br>
+${r.qty} dona<br>
+
+<div class="line"></div>
+<b>JAMI: ${r.total} so‘m</b><br>
+${r.date}
+
+<div id="qrcode"></div>
+
+<div class="line"></div>
+<center>Rahmat!</center>
+</div>
+`;
+
+document.getElementById("qrcode").innerHTML="";
+new QRCode(document.getElementById("qrcode"),{
+text:`ASADSHOH MARKET | ${r.id} | ${r.total} so‘m`,
+width:100,
+height:100
+});
+}
+
+closeReceipt(){
+receiptPanel.style.display="none";
 }
 
 render(){
-    sellSelect.innerHTML="";
-    receiptTable.innerHTML="";
-    let todaySum=0,todayQty=0,totalSum=0,totalQty=0;
-    const today=new Date().toDateString();
+sellSelect.innerHTML="";
+this.products.forEach(p=>{
+if(p.qty>0)
+sellSelect.innerHTML+=`<option value="${p.id}">${p.name} (${p.size}) - ${p.qty}</option>`;
+});
+this.renderReceipts();
+this.updateStats();
+}
 
-    this.products.forEach(p=>{
-        if(p.qty>0)
-        sellSelect.innerHTML+=`<option value="${p.id}">${p.name} (${p.size}) - ${p.qty}</option>`;
-    });
+renderReceipts(filter=""){
+receiptTable.innerHTML="";
+this.receipts
+.filter(r=>r.id.includes(filter))
+.forEach(r=>{
+receiptTable.innerHTML+=`
+<tr>
+<td>${r.id}</td>
+<td>${r.date}</td>
+<td>${r.total}</td>
+<td><button onclick='store.showReceipt(${JSON.stringify(r)})'>Ko‘rish</button></td>
+</tr>`;
+});
+}
 
-    this.receipts.forEach(r=>{
-        totalSum+=r.total;
-        totalQty+=r.qty;
-        if(new Date(r.raw).toDateString()===today){
-            todaySum+=r.total;
-            todayQty+=r.qty;
-        }
-        receiptTable.innerHTML+=`
-        <tr>
-        <td>${r.id}</td>
-        <td>${r.date}</td>
-        <td>${r.total}</td>
-        <td>${r.qty}</td>
-        <td><button onclick='store.print(${JSON.stringify(r)})'>Ko‘rish</button></td>
-        </tr>`;
-    });
+updateStats(){
+let todaySum=0,todayQty=0,totalSum=0,totalQty=0;
+const today=new Date().toDateString();
 
-    todaySumSpan.innerText=todaySum;
-    todayQtySpan.innerText=todayQty;
-    totalSumSpan.innerText=totalSum;
-    totalQtySpan.innerText=totalQty;
+this.receipts.forEach(r=>{
+totalSum+=r.total;
+totalQty+=r.qty;
+if(new Date(r.raw).toDateString()===today){
+todaySum+=r.total;
+todayQty+=r.qty;
+}
+});
+
+document.getElementById("todaySum").innerText=todaySum;
+document.getElementById("todayQty").innerText=todayQty;
+document.getElementById("totalSum").innerText=totalSum;
+document.getElementById("totalQty").innerText=totalQty;
+}
+
+resetSales(){
+const pass=prompt("Admin parolni kiriting:");
+if(pass!=="101") return alert("Parol noto‘g‘ri!");
+
+if(!confirm("Hamma savdo hisobotlari o‘chadi. Davom etasizmi?")) return;
+
+this.receipts=[];
+localStorage.setItem("receipts",JSON.stringify(this.receipts));
+this.render();
 }
 
 }
@@ -241,13 +325,13 @@ const qtyInput=document.getElementById("qty");
 const priceInput=document.getElementById("price");
 const sellSelect=document.getElementById("sellSelect");
 const sellQty=document.getElementById("sellQty");
+const receiptPanel=document.getElementById("receiptPanel");
 const receiptTable=document.getElementById("receiptTable");
-const todaySumSpan=document.getElementById("todaySum");
-const todayQtySpan=document.getElementById("todayQty");
-const totalSumSpan=document.getElementById("totalSum");
-const totalQtySpan=document.getElementById("totalQty");
+const searchInput=document.getElementById("searchInput");
+const addBtn=document.getElementById("addBtn");
+const sellBtn=document.getElementById("sellBtn");
 
-const store=new MarketPOS();
+const store=new POS();
 
 </script>
 
