@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Asadshoh Market POS</title>
+<title>Asadshoh Shop 101 POS</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
 <style>
@@ -20,9 +20,18 @@ font-family:Segoe UI,sans-serif;
 background:var(--bg);
 color:white;
 }
+.header{
+text-align:center;
+padding:20px;
+font-size:28px;
+font-weight:bold;
+background:linear-gradient(90deg,#22c55e,#3b82f6);
+color:white;
+letter-spacing:2px;
+}
 .container{
 width:95%;
-max-width:1300px;
+max-width:1200px;
 margin:20px auto 420px auto;
 }
 .card{
@@ -41,8 +50,8 @@ button{
 cursor:pointer;
 font-weight:bold;
 }
-.btn{background:var(--green);}
-.sell{background:var(--blue);}
+.btn{background:var(--green);color:white;}
+.sell{background:var(--blue);color:white;}
 .reset{background:var(--red);color:white;}
 table{
 width:100%;
@@ -95,6 +104,8 @@ font-weight:bold;
 
 <body>
 
+<div class="header">🏪 ASADSHOH SHOP 101</div>
+
 <div class="container">
 
 <div class="card">
@@ -127,7 +138,7 @@ Dona: <span id="totalQty">0</span>
 </div>
 
 <div class="card">
-<button class="reset" onclick="store.resetSales()">Hisobotni reset qilish</button>
+<button class="reset" onclick="store.resetReport()">Hisobotni reset qilish</button>
 </div>
 
 <div class="card">
@@ -229,8 +240,7 @@ receiptPanel.innerHTML=`
 
 <div class="logo">
 <div class="lion">🦁</div>
-<b>ASADSHOH MARKET</b><br>
-101-do‘kon<br>
+<b>ASADSHOH SHOP 101</b><br>
 📞 +998 99 086 75 05
 </div>
 
@@ -252,7 +262,7 @@ ${r.date}
 
 document.getElementById("qrcode").innerHTML="";
 new QRCode(document.getElementById("qrcode"),{
-text:`ASADSHOH MARKET | ${r.id} | ${r.total} so‘m`,
+text:`ASADSHOH SHOP 101 | ${r.id} | ${r.total} so‘m`,
 width:100,
 height:100
 });
@@ -306,12 +316,10 @@ document.getElementById("totalSum").innerText=totalSum;
 document.getElementById("totalQty").innerText=totalQty;
 }
 
-resetSales(){
-const pass=prompt("Admin parolni kiriting:");
+resetReport(){
+const pass=prompt("Admin parol:");
 if(pass!=="101") return alert("Parol noto‘g‘ri!");
-
-if(!confirm("Hamma savdo hisobotlari o‘chadi. Davom etasizmi?")) return;
-
+if(!confirm("Hamma savdo hisobotlari o‘chadi!")) return;
 this.receipts=[];
 localStorage.setItem("receipts",JSON.stringify(this.receipts));
 this.render();
