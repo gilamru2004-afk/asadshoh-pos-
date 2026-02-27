@@ -2,387 +2,298 @@
 <html lang="uz">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Asadshoh Shop 101 POS</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-
+<title>Bosmenti Premium ERP</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
-:root{
---green:#16a34a;
---yellow:#facc15;
---blue:#3b82f6;
---red:#ef4444;
-}
-body{
-margin:0;
-font-family:Segoe UI,sans-serif;
-background:linear-gradient(135deg,#fef9c3,#bbf7d0);
-color:#064e3b;
-}
-.login-screen{
-position:fixed;
-inset:0;
-display:flex;
-align-items:center;
-justify-content:center;
-background:linear-gradient(135deg,#fef9c3,#bbf7d0);
-z-index:9999;
-}
-.login-box{
-background:white;
-padding:40px;
-border-radius:15px;
-box-shadow:0 10px 30px rgba(0,0,0,0.2);
-text-align:center;
-}
-.login-box input{
-padding:10px;
-border-radius:8px;
-border:1px solid #ccc;
-width:250px;
-}
-.login-box button{
-padding:10px 20px;
-margin-top:15px;
-background:var(--green);
-color:white;
-border:none;
-border-radius:8px;
-cursor:pointer;
-}
-.header{
-display:flex;
-justify-content:center;
-align-items:center;
-gap:15px;
-padding:20px;
-font-size:26px;
-font-weight:bold;
-background:linear-gradient(90deg,var(--green),var(--yellow));
-color:white;
-}
-.lock-btn{
-cursor:pointer;
-font-size:22px;
-}
-.container{
-width:95%;
-max-width:1200px;
-margin:20px auto 420px auto;
-}
-.card{
-background:white;
-padding:20px;
-border-radius:15px;
-margin-bottom:20px;
-box-shadow:0 10px 25px rgba(0,0,0,0.1);
-}
-input,select,button{
-padding:8px;
-margin:5px;
-border-radius:8px;
-border:1px solid #d1fae5;
-}
-button{
-cursor:pointer;
-font-weight:bold;
-border:none;
-}
-.btn{background:var(--green);color:white;}
-.sell{background:var(--blue);color:white;}
-.reset{background:var(--red);color:white;}
-table{
-width:100%;
-border-collapse:collapse;
-}
-th,td{
-padding:8px;
-border-bottom:1px solid #d1fae5;
-text-align:center;
-}
-.dashboard{
-display:flex;
-gap:20px;
-flex-wrap:wrap;
-}
-.stat{
-flex:1;
-background:#dcfce7;
-padding:15px;
-border-radius:12px;
-text-align:center;
-}
-.receipt-panel{
-position:fixed;
-bottom:0;
-left:0;
-right:0;
-background:white;
-color:black;
-padding:15px;
-font-family:Courier New,monospace;
-border-top:5px solid var(--green);
-max-height:400px;
-overflow:auto;
-display:none;
-}
-.close-btn{
-position:absolute;
-right:10px;
-top:8px;
-cursor:pointer;
-font-weight:bold;
-}
+body{margin:0;font-family:Arial;background:#0f0f0f;color:#fff}
+header{background:#111;padding:15px;display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid gold}
+h1{color:gold;margin:0}
+.section{background:#1c1c1c;margin:15px;padding:15px;border-radius:10px}
+input,button{padding:6px;margin:4px;background:#222;color:#fff;border:1px solid #444}
+button{background:gold;color:black;font-weight:bold;cursor:pointer}
+table{width:100%;border-collapse:collapse;margin-top:10px}
+th,td{border:1px solid #333;padding:6px;text-align:center}
+.late{background:#7a0000}
+.hidden{display:none}
+#login{position:fixed;width:100%;height:100%;background:black;display:flex;justify-content:center;align-items:center;flex-direction:column}
+.clock{color:gold;font-weight:bold}
+canvas{background:white;border-radius:10px;margin-top:15px}
+.result{font-size:18px;font-weight:bold;margin-top:10px}
 </style>
 </head>
-
 <body>
 
-<!-- LOGIN -->
-<div class="login-screen" id="loginScreen">
-<div class="login-box">
-<h2>🔐 Kirish</h2>
-<input type="password" id="loginPass" placeholder="Parol">
-<br>
-<button onclick="login()">Kirish</button>
-<p id="loginError" style="color:red;"></p>
-</div>
+<div id="login">
+<h2>⭐ BOSMENTI PREMIUM 🔒</h2>
+<input type="password" id="password" placeholder="Parol">
 </div>
 
-<div id="app" style="display:none;">
+<header>
+<h1>⭐ BOSMENTI PREMIUM</h1>
+<div>
+<span id="clock" class="clock"></span>
+<button onclick="lock()">🔒</button>
+</div>
+</header>
 
-<div class="header">
-🏪 ASADSHOH SHOP 101
-<span class="lock-btn" onclick="lockApp()">🔒</span>
+<div id="app" class="hidden">
+
+<!-- OMBOR -->
+<div class="section">
+<h2>📦 Ombor</h2>
+<input id="on" placeholder="Nomi">
+<input id="or" placeholder="Razmer">
+<input type="number" id="os" placeholder="Soni">
+<input type="number" id="ot" placeholder="Tannarx">
+<button onclick="addOmbor()">Qo‘shish</button>
+<table id="omborTable"></table>
 </div>
 
-<div class="container">
-
-<div class="card">
-<h2>📦 Mahsulot qo‘shish</h2>
-<input id="name" placeholder="Tovar nomi">
-<input id="size" placeholder="Razmer">
-<input id="qty" type="number" placeholder="Soni">
-<input id="price" type="number" placeholder="Narxi (so‘m)">
-<button class="btn" id="addBtn">Qo‘shish</button>
+<!-- DOKON -->
+<div class="section">
+<h2>🏬 Do‘kon</h2>
+<input id="dn" placeholder="Nomi">
+<input id="dr" placeholder="Razmer">
+<input type="number" id="ds" placeholder="Soni">
+<button onclick="moveToShop()">Ombordan olish</button>
+<table id="shopTable"></table>
 </div>
 
-<div class="card">
-<h2>🛒 Sotish</h2>
-<select id="sellSelect"></select>
-<input id="sellQty" type="number" placeholder="Soni">
-<button class="sell" id="sellBtn">Sotish</button>
-</div>
-
-<div class="card dashboard">
-<div class="stat">
-<h3>📅 Bugungi</h3>
-<span id="todaySum">0 so‘m</span>
-</div>
-<div class="stat">
-<h3>📊 Umumiy</h3>
-<span id="totalSum">0 so‘m</span>
-</div>
-</div>
-
-<div class="card">
-<button class="reset" onclick="store.resetReport()">Hisobotni reset</button>
-</div>
-
-<div class="card">
-<h2>🧾 Cheklar Arxivi</h2>
-<input id="searchInput" placeholder="Chek ID qidirish">
-<table>
-<thead>
-<tr>
-<th>ID</th>
-<th>Sana</th>
-<th>Summa</th>
-<th>Ko‘rish</th>
-</tr>
-</thead>
-<tbody id="receiptTable"></tbody>
+<!-- SOTUV -->
+<div class="section">
+<h2>🛒 Sotuv</h2>
+<input id="sn" placeholder="Nomi">
+<input id="sr" placeholder="Razmer">
+<input type="number" id="ss" placeholder="Soni">
+<input type="number" id="sp" placeholder="Sotuv narxi">
+<button onclick="sell()">Sotish</button>
+<table id="sellTable">
+<tr><th>Nomi</th><th>Razmer</th><th>Soni</th><th>Sotuv</th><th>Foyda</th></tr>
 </table>
 </div>
 
-</div>
+<!-- XARAJAT -->
+<div class="section">
+<h2>💸 Xarajat</h2>
+<input id="xn" placeholder="Nimaga">
+<input type="number" id="xs" placeholder="Summa">
+<button onclick="addXarajat()">Qo‘shish</button>
 </div>
 
-<div class="receipt-panel" id="receiptPanel"></div>
+<!-- NASIYA -->
+<div class="section">
+<h2>💰 Nasiyalar</h2>
+<input id="ni" placeholder="Kimdan">
+<input id="nt" placeholder="Telefon">
+<input type="number" id="ns" placeholder="Summa">
+<input type="date" id="nd">
+<button onclick="addNas()">Qo‘shish</button>
+<table id="nasTable">
+<tr><th>Ism</th><th>Tel</th><th>Summa</th><th>Sana</th></tr>
+</table>
+</div>
+
+<!-- QARZ -->
+<div class="section">
+<h2>📤 Qarzlar</h2>
+<input id="qi" placeholder="Kimga">
+<input type="number" id="qs" placeholder="Summa">
+<input type="date" id="qd">
+<button onclick="addQarz()">Qo‘shish</button>
+</div>
+
+<!-- HISOBOT -->
+<div class="section">
+<h2>📊 Hisobot</h2>
+<button onclick="report()">Hisoblash</button>
+<button onclick="closeDay()">📦 Kunni yopish</button>
+<div id="result" class="result"></div>
+<canvas id="chart"></canvas>
+
+<h3>📁 Kunlik Arxiv</h3>
+<table id="archiveTable">
+<tr>
+<th>Sana</th>
+<th>Foyda</th>
+<th>Xarajat</th>
+<th>Nasiyalar</th>
+<th>Qarz</th>
+<th>Balans</th>
+</tr>
+</table>
+
+</div>
+
+</div>
 
 <script>
+let ombor=JSON.parse(localStorage.getItem("ombor"))||[];
+let shop=JSON.parse(localStorage.getItem("shop"))||[];
+let archive=JSON.parse(localStorage.getItem("archive"))||[];
 
-function login(){
-if(loginPass.value==="Asad2004@"){
-loginScreen.style.display="none";
-app.style.display="block";
-}else{
-loginError.innerText="Parol noto‘g‘ri!";
-}
-}
+let totalFoyda=0,totalX=0,totalNas=0,totalQ=0;
+let chart;
 
-function lockApp(){
-app.style.display="none";
-loginScreen.style.display="flex";
-loginPass.value="";
+function save(){
+localStorage.setItem("ombor",JSON.stringify(ombor));
+localStorage.setItem("shop",JSON.stringify(shop));
+localStorage.setItem("archive",JSON.stringify(archive));
 }
 
-class POS{
-constructor(){
-this.products=JSON.parse(localStorage.getItem("products"))||[];
-this.receipts=JSON.parse(localStorage.getItem("receipts"))||[];
-this.init();
-}
-
-formatMoney(num){
-return num.toLocaleString('uz-UZ')+" so‘m";
-}
-
-init(){
-addBtn.onclick=()=>this.addProduct();
-sellBtn.onclick=()=>this.sellProduct();
-searchInput.oninput=()=>this.renderReceipts(searchInput.value);
-
-document.addEventListener("keydown",(e)=>{
-if(e.key==="Enter"){
-if(document.activeElement.id==="sellQty") this.sellProduct();
-else this.addProduct();
+function format(n){return Number(n).toLocaleString("ru-RU")}
+password.addEventListener("input",()=>{
+if(password.value==="7777"){
+login.style.display="none";
+app.classList.remove("hidden");
+render();
+renderArchive();
 }
 });
 
-this.render();
+function lock(){
+app.classList.add("hidden");
+login.style.display="flex";
+password.value="";
 }
 
-save(){
-localStorage.setItem("products",JSON.stringify(this.products));
-localStorage.setItem("receipts",JSON.stringify(this.receipts));
+setInterval(()=>{clock.innerText=new Date().toLocaleString()},1000);
+
+function addOmbor(){
+let item=ombor.find(p=>p.n==on.value && p.r==or.value);
+if(item)item.s+=+os.value;
+else ombor.push({n:on.value,r:or.value,s:+os.value,t:+ot.value});
+save();render();
 }
 
-addProduct(){
-if(!name.value||!size.value||!qty.value||!price.value) return alert("To‘liq kiriting");
-this.products.push({
-id:Date.now(),
-name:name.value,
-size:size.value,
-qty:parseInt(qty.value),
-price:parseInt(price.value)
-});
-this.save();
-this.render();
+function moveToShop(){
+let item=ombor.find(p=>p.n==dn.value && p.r==dr.value);
+if(!item||item.s<+ds.value){alert("Yetarli emas");return;}
+item.s-=+ds.value;
+let sItem=shop.find(p=>p.n==dn.value&&p.r==dr.value);
+if(sItem)sItem.s+=+ds.value;
+else shop.push({n:item.n,r:item.r,s:+ds.value,t:item.t});
+save();render();
 }
 
-sellProduct(){
-const id=parseInt(sellSelect.value);
-const qtyVal=parseInt(sellQty.value);
-const product=this.products.find(p=>p.id===id);
-if(!product||qtyVal<=0||product.qty<qtyVal) return alert("Yetarli emas");
+function sell(){
+let item=shop.find(p=>p.n==sn.value && p.r==sr.value);
+if(!item){alert("Yo‘q");return;}
+if(item.s<+ss.value){
+let need=+ss.value-item.s;
+let om=ombor.find(p=>p.n==sn.value && p.r==sr.value);
+if(!om||om.s<need){alert("Yetarli emas");return;}
+om.s-=need;item.s+=need;
+}
+item.s-=+ss.value;
+let profit=(+sp.value-item.t)*+ss.value;
+totalFoyda+=profit;
 
-product.qty-=qtyVal;
-const total=qtyVal*product.price;
-
-const receipt={
-id:"R"+Date.now(),
-name:product.name,
-size:product.size,
-qty:qtyVal,
-total,
-date:new Date().toLocaleString()
-};
-
-this.receipts.unshift(receipt);
-this.save();
-this.render();
-this.showReceipt(receipt);
+sellTable.innerHTML+=`<tr>
+<td>${sn.value}</td>
+<td>${sr.value}</td>
+<td>${ss.value}</td>
+<td>${format(sp.value)}</td>
+<td>${format(profit)}</td>
+</tr>`;
+save();render();
 }
 
-showReceipt(r){
-receiptPanel.style.display="block";
-receiptPanel.innerHTML=`
-<div style="position:relative">
-<div class="close-btn" onclick="receiptPanel.style.display='none'">❌</div>
-<div class="close-btn" style="right:40px;" onclick="lockApp()">🔒</div>
-🦁 ASADSHOH SHOP 101<br>
-📞 +998 99 086 75 05<br>
-<hr>
-${r.name} (${r.size})<br>
-${r.qty} dona<br>
-<b>${this.formatMoney(r.total)}</b><br>
-${r.date}
-<div id="qrcode"></div>
-</div>
+function addXarajat(){totalX+=+xs.value}
+function addNas(){
+let late=(nd.value<=new Date().toISOString().split("T")[0])?"late":"";
+totalNas+=+ns.value;
+nasTable.innerHTML+=`<tr class="${late}">
+<td>${ni.value}</td>
+<td>${nt.value}</td>
+<td>${format(ns.value)}</td>
+<td>${nd.value}</td>
+</tr>`;
+}
+function addQarz(){totalQ+=+qs.value}
+
+function report(){
+let om=ombor.reduce((a,b)=>a+b.s*b.t,0);
+let sh=shop.reduce((a,b)=>a+b.s*b.t,0);
+let balans=totalFoyda-totalX-totalQ+totalNas;
+
+result.innerHTML=`
+Ombor: ${format(om)}<br>
+Do‘kon: ${format(sh)}<br>
+Foyda: ${format(totalFoyda)}<br>
+Xarajat: ${format(totalX)}<br>
+Nasiyalar: ${format(totalNas)}<br>
+Qarzlar: ${format(totalQ)}<br><br>
+Yakuniy balans: ${format(balans)}
 `;
-document.getElementById("qrcode").innerHTML="";
-new QRCode(document.getElementById("qrcode"),{
-text:r.id+" "+r.total,
-width:100,height:100
+
+if(chart)chart.destroy();
+chart=new Chart(document.getElementById("chart"),{
+type:"bar",
+data:{
+labels:["Ombor","Do‘kon","Foyda","Xarajat","Nasiyalar","Qarz"],
+datasets:[{
+data:[om,sh,totalFoyda,totalX,totalNas,totalQ],
+backgroundColor:["gold","blue","green","red","purple","orange"]
+}]
+}
 });
 }
 
-render(){
-sellSelect.innerHTML="";
-this.products.forEach(p=>{
-if(p.qty>0)
-sellSelect.innerHTML+=`<option value="${p.id}">${p.name} (${p.size}) - ${p.qty}</option>`;
+function closeDay(){
+let today=new Date().toLocaleDateString();
+let balans=totalFoyda-totalX-totalQ+totalNas;
+
+archive.push({
+date:today,
+foyda:totalFoyda,
+xarajat:totalX,
+nas:totalNas,
+qarz:totalQ,
+balans:balans
 });
-this.updateStats();
-this.renderReceipts();
+
+totalFoyda=0;totalX=0;totalNas=0;totalQ=0;
+sellTable.innerHTML=`<tr><th>Nomi</th><th>Razmer</th><th>Soni</th><th>Sotuv</th><th>Foyda</th></tr>`;
+
+save();
+renderArchive();
+report();
+alert("Kun yopildi!");
 }
 
-renderReceipts(filter=""){
-receiptTable.innerHTML="";
-this.receipts
-.filter(r=>r.id.includes(filter))
-.forEach(r=>{
-receiptTable.innerHTML+=`
-<tr>
-<td>${r.id}</td>
-<td>${r.date}</td>
-<td>${this.formatMoney(r.total)}</td>
-<td><button onclick='store.showReceipt(${JSON.stringify(r)})'>Ko‘rish</button></td>
+function renderArchive(){
+archiveTable.innerHTML=`<tr>
+<th>Sana</th><th>Foyda</th><th>Xarajat</th>
+<th>Nasiyalar</th><th>Qarz</th><th>Balans</th></tr>`;
+archive.forEach(a=>{
+archiveTable.innerHTML+=`<tr>
+<td>${a.date}</td>
+<td>${format(a.foyda)}</td>
+<td>${format(a.xarajat)}</td>
+<td>${format(a.nas)}</td>
+<td>${format(a.qarz)}</td>
+<td>${format(a.balans)}</td>
 </tr>`;
 });
 }
 
-updateStats(){
-let total=0;
-let today=0;
-const todayDate=new Date().toDateString();
-
-this.receipts.forEach(r=>{
-total+=r.total;
-if(new Date(r.date).toDateString()===todayDate){
-today+=r.total;
-}
+function render(){
+omborTable.innerHTML="<tr><th>Nomi</th><th>Razmer</th><th>Soni</th><th>Tannarx</th><th>Jami</th></tr>";
+ombor.forEach(p=>{
+if(p.s>0)omborTable.innerHTML+=`<tr>
+<td>${p.n}</td><td>${p.r}</td><td>${p.s}</td>
+<td>${format(p.t)}</td><td>${format(p.s*p.t)}</td></tr>`;
 });
-
-totalSum.innerText=this.formatMoney(total);
-todaySum.innerText=this.formatMoney(today);
+shopTable.innerHTML="<tr><th>Nomi</th><th>Razmer</th><th>Soni</th><th>Tannarx</th><th>Jami</th></tr>";
+shop.forEach(p=>{
+if(p.s>0)shopTable.innerHTML+=`<tr>
+<td>${p.n}</td><td>${p.r}</td><td>${p.s}</td>
+<td>${format(p.t)}</td><td>${format(p.s*p.t)}</td></tr>`;
+});
 }
 
-resetReport(){
-if(prompt("Admin parol")!=="101") return alert("Xato");
-this.receipts=[];
-this.save();
-this.render();
-}
-}
-
-const name=document.getElementById("name");
-const size=document.getElementById("size");
-const qty=document.getElementById("qty");
-const price=document.getElementById("price");
-const sellSelect=document.getElementById("sellSelect");
-const sellQty=document.getElementById("sellQty");
-const receiptPanel=document.getElementById("receiptPanel");
-const receiptTable=document.getElementById("receiptTable");
-const searchInput=document.getElementById("searchInput");
-const totalSum=document.getElementById("totalSum");
-const todaySum=document.getElementById("todaySum");
-const addBtn=document.getElementById("addBtn");
-const sellBtn=document.getElementById("sellBtn");
-
-const store=new POS();
-
+render();
+renderArchive();
 </script>
 
 </body>
