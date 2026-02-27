@@ -2,23 +2,25 @@
 <html lang="uz">
 <head>
 <meta charset="UTF-8">
-<title>Bosmenti Premium ERP</title>
+<title>BOSMENTI PREMIUM – FULL ERP</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
-body{margin:0;font-family:Arial;background:#0f0f0f;color:#fff}
+body{margin:0;font-family:Arial;background:#0f0f0f;color:white}
 header{background:#111;padding:15px;display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid gold}
 h1{color:gold;margin:0}
 .section{background:#1c1c1c;margin:15px;padding:15px;border-radius:10px}
-input,button{padding:6px;margin:4px;background:#222;color:#fff;border:1px solid #444}
+input,button,select{padding:6px;margin:4px;background:#222;color:white;border:1px solid #444}
 button{background:gold;color:black;font-weight:bold;cursor:pointer}
 table{width:100%;border-collapse:collapse;margin-top:10px}
 th,td{border:1px solid #333;padding:6px;text-align:center}
-.late{background:#7a0000}
 .hidden{display:none}
 #login{position:fixed;width:100%;height:100%;background:black;display:flex;justify-content:center;align-items:center;flex-direction:column}
 .clock{color:gold;font-weight:bold}
 canvas{background:white;border-radius:10px;margin-top:15px}
 .result{font-size:18px;font-weight:bold;margin-top:10px}
+.late{background:#7a0000}
 </style>
 </head>
 <body>
@@ -107,6 +109,10 @@ canvas{background:white;border-radius:10px;margin-top:15px}
 <h2>📊 Hisobot</h2>
 <button onclick="report()">Hisoblash</button>
 <button onclick="closeDay()">📦 Kunni yopish</button>
+<button onclick="exportPDF()">📄 PDF</button>
+<button onclick="exportExcel()">📤 Excel</button>
+<input type="date" id="searchDate">
+<button onclick="searchByDate()">🔍 Sana bo‘yicha qidiruv</button>
 <div id="result" class="result"></div>
 <canvas id="chart"></canvas>
 
@@ -119,28 +125,33 @@ canvas{background:white;border-radius:10px;margin-top:15px}
 <th>Nasiyalar</th>
 <th>Qarz</th>
 <th>Balans</th>
+<th>Sotuvlar</th>
 </tr>
 </table>
 
 </div>
 
 </div>
-
 <script>
-let ombor=JSON.parse(localStorage.getItem("ombor"))||[];
-let shop=JSON.parse(localStorage.getItem("shop"))||[];
-let archive=JSON.parse(localStorage.getItem("archive"))||[];
-
+/* ======= LOCAL STORAGE ======= */
+let ombor = JSON.parse(localStorage.getItem("ombor"))||[];
+let shop = JSON.parse(localStorage.getItem("shop"))||[];
+let archive = JSON.parse(localStorage.getItem("archive"))||[];
+let todaySales = [];
 let totalFoyda=0,totalX=0,totalNas=0,totalQ=0;
 let chart;
 
+/* ======= SAVE ======= */
 function save(){
 localStorage.setItem("ombor",JSON.stringify(ombor));
 localStorage.setItem("shop",JSON.stringify(shop));
 localStorage.setItem("archive",JSON.stringify(archive));
 }
 
+/* ======= FORMAT NUMBER ======= */
 function format(n){return Number(n).toLocaleString("ru-RU")}
+
+/* ======= LOGIN ======= */
 password.addEventListener("input",()=>{
 if(password.value==="7777"){
 login.style.display="none";
@@ -149,15 +160,16 @@ render();
 renderArchive();
 }
 });
-
 function lock(){
 app.classList.add("hidden");
 login.style.display="flex";
 password.value="";
 }
 
-setInterval(()=>{clock.innerText=new Date().toLocaleString()},1000);
+/* ======= CLOCK ======= */
+setInterval(()=>{document.getElementById("clock").innerText=new Date().toLocaleString()},1000);
 
+/* ======= OMBOR ======= */
 function addOmbor(){
 let item=ombor.find(p=>p.n==on.value && p.r==or.value);
 if(item)item.s+=+os.value;
@@ -165,6 +177,7 @@ else ombor.push({n:on.value,r:or.value,s:+os.value,t:+ot.value});
 save();render();
 }
 
+/* ======= DOKON ======= */
 function moveToShop(){
 let item=ombor.find(p=>p.n==dn.value && p.r==dr.value);
 if(!item||item.s<+ds.value){alert("Yetarli emas");return;}
@@ -175,6 +188,7 @@ else shop.push({n:item.n,r:item.r,s:+ds.value,t:item.t});
 save();render();
 }
 
+/* ======= SOTUV ======= */
 function sell(){
 let item=shop.find(p=>p.n==sn.value && p.r==sr.value);
 if(!item){alert("Yo‘q");return;}
@@ -187,96 +201,137 @@ om.s-=need;item.s+=need;
 item.s-=+ss.value;
 let profit=(+sp.value-item.t)*+ss.value;
 totalFoyda+=profit;
-
+todaySales.push({name:sn.value,size:sr.value,qty:+ss.value,price:+sp.value,profit:profit});
 sellTable.innerHTML+=`<tr>
-<td>${sn.value}</td>
-<td>${sr.value}</td>
-<td>${ss.value}</td>
-<td>${format(sp.value)}</td>
-<td>${format(profit)}</td>
+<td>${sn.value}</td><td>${sr.value}</td><td>${ss.value}</td>
+<td>${format(sp.value)}</td><td>${format(profit)}</td>
 </tr>`;
 save();render();
 }
 
+/* ======= XARAJAT ======= */
 function addXarajat(){totalX+=+xs.value}
+
+/* ======= NASIYA ======= */
 function addNas(){
 let late=(nd.value<=new Date().toISOString().split("T")[0])?"late":"";
 totalNas+=+ns.value;
 nasTable.innerHTML+=`<tr class="${late}">
-<td>${ni.value}</td>
-<td>${nt.value}</td>
-<td>${format(ns.value)}</td>
-<td>${nd.value}</td>
-</tr>`;
+<td>${ni.value}</td><td>${nt.value}</td>
+<td>${format(ns.value)}</td><td>${nd.value}</td></tr>`;
 }
+
+/* ======= QARZ ======= */
 function addQarz(){totalQ+=+qs.value}
 
+/* ======= HISOBOT ======= */
 function report(){
 let om=ombor.reduce((a,b)=>a+b.s*b.t,0);
 let sh=shop.reduce((a,b)=>a+b.s*b.t,0);
 let balans=totalFoyda-totalX-totalQ+totalNas;
-
 result.innerHTML=`
 Ombor: ${format(om)}<br>
 Do‘kon: ${format(sh)}<br>
 Foyda: ${format(totalFoyda)}<br>
 Xarajat: ${format(totalX)}<br>
 Nasiyalar: ${format(totalNas)}<br>
-Qarzlar: ${format(totalQ)}<br><br>
-Yakuniy balans: ${format(balans)}
+Qarzlar: ${format(totalQ)}<br>
+<br>Yakuniy balans: ${format(balans)}
 `;
-
 if(chart)chart.destroy();
 chart=new Chart(document.getElementById("chart"),{
 type:"bar",
-data:{
-labels:["Ombor","Do‘kon","Foyda","Xarajat","Nasiyalar","Qarz"],
-datasets:[{
-data:[om,sh,totalFoyda,totalX,totalNas,totalQ],
-backgroundColor:["gold","blue","green","red","purple","orange"]
-}]
-}
+data:{labels:["Ombor","Do‘kon","Foyda","Xarajat","Nasiyalar","Qarz"],
+datasets:[{data:[om,sh,totalFoyda,totalX,totalNas,totalQ],backgroundColor:["gold","blue","green","red","purple","orange"]}]}
 });
 }
 
+/* ======= KUN YOPISH ======= */
 function closeDay(){
 let today=new Date().toLocaleDateString();
 let balans=totalFoyda-totalX-totalQ+totalNas;
-
-archive.push({
-date:today,
-foyda:totalFoyda,
-xarajat:totalX,
-nas:totalNas,
-qarz:totalQ,
-balans:balans
-});
-
-totalFoyda=0;totalX=0;totalNas=0;totalQ=0;
+archive.push({date:today,foyda:totalFoyda,xarajat:totalX,nas:totalNas,qarz:totalQ,balans:balans,sales:todaySales});
+totalFoyda=0;totalX=0;totalNas=0;totalQ=0;todaySales=[];
 sellTable.innerHTML=`<tr><th>Nomi</th><th>Razmer</th><th>Soni</th><th>Sotuv</th><th>Foyda</th></tr>`;
-
-save();
-renderArchive();
-report();
-alert("Kun yopildi!");
+save();renderArchive();report();alert("Kun yopildi va arxivlandi!");
 }
-
+/* ======= ARXIV ======= */
 function renderArchive(){
 archiveTable.innerHTML=`<tr>
 <th>Sana</th><th>Foyda</th><th>Xarajat</th>
-<th>Nasiyalar</th><th>Qarz</th><th>Balans</th></tr>`;
-archive.forEach(a=>{
+<th>Nasiyalar</th><th>Qarz</th><th>Balans</th><th>Sotuvlar</th></tr>`;
+archive.forEach((a,i)=>{
 archiveTable.innerHTML+=`<tr>
-<td>${a.date}</td>
-<td>${format(a.foyda)}</td>
-<td>${format(a.xarajat)}</td>
-<td>${format(a.nas)}</td>
-<td>${format(a.qarz)}</td>
-<td>${format(a.balans)}</td>
-</tr>`;
+<td>${a.date}</td><td>${format(a.foyda)}</td>
+<td>${format(a.xarajat)}</td><td>${format(a.nas)}</td>
+<td>${format(a.qarz)}</td><td>${format(a.balans)}</td>
+<td><button onclick="viewSales(${i})">Ko‘rish</button></td></tr>`;
 });
 }
 
+function viewSales(i){
+let data=archive[i];
+if(!data.sales||data.sales.length===0){alert("Bu kunda sotuv yo‘q");return;}
+let text="📅 "+data.date+"\n\n";
+data.sales.forEach(s=>{
+text+=`${s.name} | ${s.size}\nSoni: ${s.qty}\nNarxi: ${format(s.price)}\nFoyda: ${format(s.profit)}\n----------------\n`;
+});
+alert(text);
+}
+
+/* ======= SANAGA QIDIRUV ======= */
+function searchByDate(){
+let d=document.getElementById("searchDate").value;
+if(!d){alert("Sana tanlang");return;}
+let found=archive.filter(a=>a.date===new Date(d).toLocaleDateString());
+if(found.length===0){alert("Topilmadi");return;}
+let txt="Natija:\n";
+found.forEach(a=>{
+txt+=`Sana: ${a.date} | Foyda: ${format(a.foyda)} | Sotuvlar: ${a.sales.length}\n`;
+});
+alert(txt);
+}
+
+/* ======= PDF EXPORT ======= */
+function exportPDF(){
+if(archive.length===0){alert("Arxiv bo‘sh!");return;}
+const { jsPDF } = window.jspdf;
+let doc=new jsPDF();
+doc.setFontSize(14);
+doc.text("BOSMENTI PREMIUM – Kunlik Arxiv",10,10);
+let y=20;
+let lastDay=archive[archive.length-1];
+doc.text(`Sana: ${lastDay.date} Foyda: ${format(lastDay.foyda)} Xarajat: ${format(lastDay.xarajat)} Balans: ${format(lastDay.balans)}`,10,y);
+y+=10;
+if(lastDay.sales && lastDay.sales.length>0){
+doc.text("Sotilgan mahsulotlar:",10,y); y+=10;
+lastDay.sales.forEach(s=>{
+doc.text(`${s.name} | ${s.size} Soni: ${s.qty} Narxi: ${format(s.price)} Foyda: ${format(s.profit)}`,10,y);
+y+=10;
+});
+}
+doc.save("kunlik_arxiv.pdf");
+}
+
+/* ======= EXCEL EXPORT ======= */
+function exportExcel(){
+if(archive.length===0){alert("Arxiv bo‘sh!");return;}
+let lastDay=archive[archive.length-1];
+let ws_data=[["Sana","Foyda","Xarajat","Nasiyalar","Qarz","Balans"]];
+ws_data.push([lastDay.date,lastDay.foyda,lastDay.xarajat,lastDay.nas,lastDay.qarz,lastDay.balans]);
+if(lastDay.sales && lastDay.sales.length>0){
+ws_data.push([]); ws_data.push(["Sotilgan mahsulotlar"]); ws_data.push(["Nomi","Razmer","Soni","Narxi","Foyda"]);
+lastDay.sales.forEach(s=>{
+ws_data.push([s.name,s.size,s.qty,s.price,s.profit]);
+});
+}
+let wb=XLSX.utils.book_new();
+let ws=XLSX.utils.aoa_to_sheet(ws_data);
+XLSX.utils.book_append_sheet(wb,ws,"Kunlik arxiv");
+XLSX.writeFile(wb,"kunlik_arxiv.xlsx");
+}
+
+/* ======= RENDER ======= */
 function render(){
 omborTable.innerHTML="<tr><th>Nomi</th><th>Razmer</th><th>Soni</th><th>Tannarx</th><th>Jami</th></tr>";
 ombor.forEach(p=>{
@@ -291,7 +346,6 @@ if(p.s>0)shopTable.innerHTML+=`<tr>
 <td>${format(p.t)}</td><td>${format(p.s*p.t)}</td></tr>`;
 });
 }
-
 render();
 renderArchive();
 </script>
