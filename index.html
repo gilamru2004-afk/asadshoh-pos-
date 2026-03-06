@@ -3,812 +3,926 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GALAXY ERP v18.0 | Infinity Business Suite</title>
+    <title>GALAXY ERP v20.0 - Professional Business Suite</title>
     
+    <!-- Tashqi kutubxonalar -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <style>
-        /* MUKAMMAL RANG TIZIMI */
         :root {
             --primary: #6366f1;
-            --primary-soft: rgba(99, 102, 241, 0.1);
-            --sidebar: #0f172a;
-            --bg: #f8fafc;
-            --card: #ffffff;
+            --primary-glow: rgba(99, 102, 241, 0.4);
+            --sidebar-bg: #0f172a;
+            --main-bg: #f1f5f9;
+            --card-bg: #ffffff;
             --text-main: #1e293b;
             --text-muted: #64748b;
+            --border: #e2e8f0;
             --success: #10b981;
             --danger: #ef4444;
             --warning: #f59e0b;
-            --border: #e2e8f0;
-            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
-            --shadow-lg: 0 20px 25px -5px rgb(0 0 0 / 0.1);
-            --radius: 20px;
+            --radius: 24px;
+            --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
         }
 
-        /* DINAMIK MAVZULAR */
-        body.theme-indigo { --primary: #6366f1; }
-        body.theme-emerald { --primary: #10b981; }
-        body.theme-rose { --primary: #f43f5e; }
-        body.theme-amber { --primary: #f59e0b; }
-        body.theme-dark { --bg: #020617; --card: #0f172a; --text-main: #f8fafc; --border: #1e293b; }
+        body.theme-indigo { --primary: #6366f1; --primary-glow: rgba(99, 102, 241, 0.4); }
+        body.theme-emerald { --primary: #10b981; --primary-glow: rgba(16, 185, 129, 0.4); }
+        body.theme-rose { --primary: #f43f5e; --primary-glow: rgba(244, 63, 94, 0.4); }
+        body.theme-amber { --primary: #f59e0b; --primary-glow: rgba(245, 158, 11, 0.4); }
 
-        * { margin:0; padding:0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
-        body { background: var(--bg); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; transition: all 0.4s ease; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
+        body { background: var(--main-bg); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; transition: all 0.3s ease; }
 
-        /* FLOATING SIDEBAR */
-        .sidebar { 
-            width: 280px; background: var(--sidebar); color: white; display: flex; 
-            flex-direction: column; padding: 30px 20px; position: relative; z-index: 100;
-            transition: 0.3s;
-        }
-        .brand { 
-            display: flex; align-items: center; gap: 15px; font-size: 1.5rem; 
-            font-weight: 800; color: var(--primary); margin-bottom: 40px;
-            padding-left: 10px;
-        }
-        .nav-list { list-style: none; flex: 1; }
-        .nav-item { 
-            padding: 14px 18px; border-radius: 16px; margin-bottom: 10px; 
-            cursor: pointer; display: flex; align-items: center; gap: 14px; 
-            color: #94a3b8; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            border: 1px solid transparent;
-        }
-        .nav-item:hover { background: rgba(255,255,255,0.05); color: white; transform: translateX(8px); }
-        .nav-item.active { 
-            background: var(--primary); color: white; 
-            box-shadow: 0 10px 20px -5px var(--primary);
-            border: 1px solid rgba(255,255,255,0.1);
-        }
-        
-        .shutdown-zone { margin-top: auto; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px; }
-        .btn-shutdown { 
-            background: rgba(239, 68, 68, 0.1); color: #ef4444; width: 100%; 
-            padding: 16px; border-radius: 16px; border: 1px solid rgba(239, 68, 68, 0.2); 
-            cursor: pointer; display: flex; align-items: center; justify-content: center;
-            gap: 12px; font-weight: 700; transition: 0.3s;
-        }
-        .btn-shutdown:hover { background: #ef4444; color: white; transform: scale(1.02); }
-
-        /* MAIN LAYOUT */
-        .main-content { flex: 1; overflow-y: auto; padding: 40px; scroll-behavior: smooth; position: relative; }
-        .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; }
-        .clock-box { background: var(--card); padding: 12px 24px; border-radius: 50px; border: 1px solid var(--border); box-shadow: var(--shadow-sm); font-weight: 700; }
-
-        /* FLOATING CARDS */
-        .card { 
-            background: var(--card); padding: 30px; border-radius: 28px; border: 1px solid var(--border); 
-            box-shadow: var(--shadow-md); transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
-            margin-bottom: 30px; animation: slideUp 0.6s ease-out;
-        }
-        .card:hover { transform: translateY(-8px); box-shadow: var(--shadow-lg); }
-
-        @keyframes slideUp { from { opacity: 0; transform: translateY(40px); } to { opacity: 1; transform: translateY(0); } }
-
-        /* STATS GRID */
-        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; margin-bottom: 30px; }
-        .stat-card { 
-            padding: 25px; border-radius: 28px; color: white; position: relative; 
-            overflow: hidden; display: flex; flex-direction: column; gap: 10px;
-        }
-        .stat-card.kassa { background: linear-gradient(135deg, #6366f1, #a855f7); }
-        .stat-card.profit { background: linear-gradient(135deg, #10b981, #059669); }
-        .stat-card.qarz { background: linear-gradient(135deg, #f43f5e, #e11d48); }
-        .stat-card.exp { background: linear-gradient(135deg, #f59e0b, #d97706); }
-        .stat-label { font-size: 0.9rem; font-weight: 500; opacity: 0.9; text-transform: uppercase; letter-spacing: 1px; }
-        .stat-value { font-size: 1.8rem; font-weight: 800; }
-
-        /* TABLES */
-        .table-container { overflow-x: auto; }
-        table { width: 100%; border-collapse: separate; border-spacing: 0 12px; }
-        th { padding: 15px; text-align: left; color: var(--text-muted); font-size: 0.8rem; font-weight: 700; text-transform: uppercase; }
-        td { padding: 20px; background: var(--card); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); transition: 0.3s; }
-        td:first-child { border-left: 1px solid var(--border); border-radius: 18px 0 0 18px; }
-        td:last-child { border-right: 1px solid var(--border); border-radius: 0 18px 18px 0; }
-        tr:hover td { background: var(--primary-soft); border-color: var(--primary); }
-
-        /* BADGES */
-        .badge { padding: 6px 12px; border-radius: 10px; font-size: 0.75rem; font-weight: 700; }
-        .badge-red { background: #fee2e2; color: #ef4444; }
-        .badge-green { background: #dcfce7; color: #10b981; }
-
-        /* FORMS */
-        .form-group { margin-bottom: 20px; }
-        label { display: block; margin-bottom: 8px; font-weight: 600; font-size: 0.9rem; color: var(--text-muted); }
-        input, select { 
-            width: 100%; padding: 15px; border: 2px solid var(--border); border-radius: 16px; 
-            outline: none; transition: 0.3s; background: var(--bg); font-size: 1rem;
-        }
-        input:focus { border-color: var(--primary); background: var(--card); box-shadow: 0 0 0 4px var(--primary-soft); }
-        
-        .btn { 
-            padding: 16px 28px; border-radius: 16px; border: none; font-weight: 800; 
-            cursor: pointer; display: flex; align-items: center; justify-content: center;
-            gap: 10px; transition: 0.3s;
-        }
-        .btn-primary { background: var(--primary); color: white; }
-        .btn-success { background: var(--success); color: white; }
-        .btn-danger { background: var(--danger); color: white; }
-        .btn:hover { transform: translateY(-3px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
-
-        /* MODALS */
-        .modal-overlay { 
-            position: fixed; inset: 0; background: rgba(15, 23, 42, 0.9); 
-            backdrop-filter: blur(10px); display: none; align-items: center; 
-            justify-content: center; z-index: 1000; padding: 20px;
-        }
-        .modal-content { 
-            background: var(--card); padding: 40px; border-radius: 35px; width: 100%; 
-            max-width: 550px; text-align: center; border: 1px solid var(--border);
-            animation: modalIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
-        @keyframes modalIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-
-        /* SETTINGS OPTIONS */
-        .theme-picker { display: flex; gap: 15px; margin-top: 15px; }
-        .theme-circle { width: 45px; height: 45px; border-radius: 15px; cursor: pointer; border: 3px solid white; box-shadow: var(--shadow-md); transition: 0.2s; }
-        .theme-circle:hover { transform: scale(1.1); }
-        .icon-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; margin-top: 15px; }
-        .icon-box { 
-            padding: 15px; background: var(--bg); border-radius: 16px; 
-            cursor: pointer; text-align: center; font-size: 1.2rem; border: 2px solid transparent;
-        }
-        .icon-box.active { border-color: var(--primary); color: var(--primary); background: var(--card); }
-
-        /* PANELS */
-        .panel { display: none; }
-        .panel.active { display: block; }
-
-        /* LOCK SCREEN */
-        #auth-screen { 
-            position: fixed; inset: 0; background: var(--sidebar); z-index: 9999; 
-            display: flex; align-items: center; justify-content: center;
-        }
-        .auth-card { 
-            background: var(--card); padding: 50px; border-radius: 40px; 
-            width: 400px; text-align: center; box-shadow: var(--shadow-lg);
-        }
-        .pin-field { 
-            width: 100%; border: none; border-bottom: 4px solid var(--primary); 
-            font-size: 3rem; text-align: center; letter-spacing: 15px; 
-            margin-top: 30px; outline: none; background: transparent; color: var(--text-main);
-        }
-
-        /* CUSTOM SCROLLBAR */
-        ::-webkit-scrollbar { width: 8px; }
+        /* SCROLLBAR CUSTOMIZATION */
+        ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        /* --- LOGIN SCREEN --- */
+        #login-overlay { 
+            position: fixed; inset: 0; background: #020617; z-index: 10000; 
+            display: flex; align-items: center; justify-content: center; transition: 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .login-card { 
+            background: white; padding: 60px; border-radius: 50px; width: 450px; text-align: center;
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); transform: scale(1); transition: 0.5s;
+        }
+        .login-card h1 { font-size: 2.5rem; font-weight: 900; background: linear-gradient(to right, var(--primary), #a855f7); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 10px; }
+        .pin-box { 
+            width: 100%; border: none; border-bottom: 5px solid var(--primary); font-size: 3.5rem; 
+            text-align: center; letter-spacing: 15px; outline: none; margin-top: 30px; color: var(--text-main);
+            background: transparent;
+        }
+
+        /* --- SIDEBAR --- */
+        .sidebar { width: 300px; background: var(--sidebar-bg); color: white; padding: 30px; display: flex; flex-direction: column; transition: 0.4s; }
+        .brand { display: flex; align-items: center; gap: 15px; font-size: 1.6rem; font-weight: 800; color: var(--primary); margin-bottom: 40px; }
+        .nav-list { list-style: none; flex: 1; overflow-y: auto; }
+        .nav-item { 
+            padding: 16px 20px; border-radius: 18px; margin-bottom: 8px; cursor: pointer; 
+            display: flex; align-items: center; gap: 15px; color: #94a3b8; transition: 0.3s all cubic-bezier(0.4, 0, 0.2, 1); 
+        }
+        .nav-item i { width: 20px; font-size: 1.2rem; }
+        .nav-item:hover { background: rgba(255,255,255,0.08); color: white; transform: translateX(5px); }
+        .nav-item.active { background: var(--primary); color: white; box-shadow: 0 10px 25px var(--primary-glow); }
+
+        /* --- ACTION BAR --- */
+        .action-bar { width: 90px; background: white; border-left: 1px solid var(--border); display: flex; flex-direction: column; align-items: center; padding: 30px 0; gap: 25px; }
+        .action-btn { 
+            width: 55px; height: 55px; border-radius: 20px; display: flex; align-items: center; 
+            justify-content: center; cursor: pointer; transition: 0.3s; font-size: 1.4rem; border: none; position: relative;
+        }
+        .action-btn:hover { transform: scale(1.1); }
+        .btn-lock { background: #f1f5f9; color: var(--sidebar-bg); }
+        .btn-backup { background: #e0e7ff; color: var(--primary); }
+        .btn-close-shop { background: #fee2e2; color: var(--danger); }
+
+        /* --- MAIN CONTENT --- */
+        .main-content { flex: 1; overflow-y: auto; padding: 40px; position: relative; scroll-behavior: smooth; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 35px; }
+        .header h2 { font-size: 2rem; font-weight: 800; letter-spacing: -0.5px; }
+        .clock-box { background: white; padding: 12px 25px; border-radius: 15px; font-weight: 700; box-shadow: var(--shadow); color: var(--primary); font-size: 1.1rem; }
+
+        /* STATS */
+        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 35px; }
+        .stat-card { 
+            background: white; padding: 25px; border-radius: var(--radius); border: 1px solid var(--border);
+            transition: 0.3s; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+        .stat-card:hover { transform: translateY(-5px); box-shadow: var(--shadow); }
+        .stat-card .label { color: var(--text-muted); font-size: 0.9rem; font-weight: 600; text-transform: uppercase; }
+        .stat-card .val { font-size: 1.8rem; font-weight: 800; margin-top: 10px; }
+
+        /* CARDS & TABLES */
+        .card { 
+            background: white; padding: 30px; border-radius: 30px; border: 1px solid var(--border); 
+            margin-bottom: 30px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+        
+        .search-container { position: relative; margin-bottom: 20px; }
+        .search-container i { position: absolute; left: 20px; top: 18px; color: var(--text-muted); }
+        .search-input { width: 100%; padding: 16px 20px 16px 55px; border-radius: 18px; border: 2px solid var(--border); outline: none; transition: 0.3s; font-size: 1rem; }
+        .search-input:focus { border-color: var(--primary); box-shadow: 0 0 0 4px var(--primary-glow); }
+
+        table { width: 100%; border-collapse: separate; border-spacing: 0 10px; }
+        th { text-align: left; padding: 15px; color: var(--text-muted); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; }
+        td { padding: 18px; background: #fff; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); font-size: 0.95rem; }
+        td:first-child { border-left: 1px solid var(--border); border-radius: 15px 0 0 15px; font-weight: 600; }
+        td:last-child { border-right: 1px solid var(--border); border-radius: 0 15px 15px 0; }
+
+        /* FORMS */
+        .grid-inputs { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px; }
+        label { font-size: 0.85rem; font-weight: 700; color: var(--text-main); margin-left: 5px; }
+        input, select { 
+            width: 100%; padding: 15px; border: 2px solid var(--border); border-radius: 16px; 
+            outline: none; margin-top: 8px; font-size: 0.95rem; transition: 0.3s;
+        }
+        input:focus, select:focus { border-color: var(--primary); }
+
+        .btn { 
+            padding: 15px 30px; border-radius: 18px; border: none; font-weight: 700; 
+            cursor: pointer; transition: 0.3s; display: inline-flex; align-items: center; 
+            justify-content: center; gap: 10px; font-size: 1rem;
+        }
+        .btn:active { transform: scale(0.95); }
+        .btn-p { background: var(--primary); color: white; box-shadow: 0 10px 20px var(--primary-glow); }
+        .btn-s { background: var(--success); color: white; }
+        .btn-d { background: var(--danger); color: white; }
+        .btn-w { background: var(--warning); color: white; }
+
+        /* MODAL */
+        .modal { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(8px); display: none; align-items: center; justify-content: center; z-index: 20000; animation: fadeIn 0.3s; }
+        .modal-body { background: white; padding: 45px; border-radius: 40px; width: 550px; text-align: center; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); }
+        
+        /* UTILS */
+        .badge { padding: 6px 12px; border-radius: 10px; font-size: 0.8rem; font-weight: 700; }
+        .bg-red { background: #fee2e2; color: #ef4444; }
+        .bg-green { background: #dcfce7; color: #10b981; }
+        .bg-blue { background: #e0e7ff; color: #6366f1; }
+        
+        .panel { display: none; animation: slideUp 0.4s ease; }
+        .panel.active { display: block; }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* PRINT STYLES */
+        @media print {
+            .sidebar, .action-bar, .header, .btn, .search-container { display: none !important; }
+            .main-content { padding: 0; }
+            .card { border: none; box-shadow: none; }
+        }
     </style>
 </head>
 <body class="theme-indigo">
 
-<div id="auth-screen">
-    <div class="auth-card">
-        <div style="font-size: 4rem; margin-bottom: 20px;">🛡️</div>
-        <h2 id="auth-title">GALAXY ERP v18</h2>
-        <p style="color: var(--text-muted);">Tizimga kirish uchun PIN kiriting</p>
-        <input type="password" id="main-pin" class="pin-field" maxlength="4" autofocus>
+<!-- LOGIN SCREEN -->
+<div id="login-overlay">
+    <div class="login-card">
+        <i class="fas fa-shield-halved fa-3x" style="color: var(--primary); margin-bottom: 20px;"></i>
+        <h1>GALAXY ERP v20</h1>
+        <p style="color: var(--text-muted); font-weight: 500;">Xavfsiz tizimga kirish</p>
+        <input type="password" id="pin-input" class="pin-box" maxlength="4" autofocus placeholder="****">
+        <p style="margin-top: 30px; font-size: 0.8rem; color: #94a3b8;">Dasturiy ta'minot Galaxy Corp tomonidan himoyalangan</p>
     </div>
 </div>
 
+<!-- SIDEBAR -->
 <nav class="sidebar">
     <div class="brand">
-        <i class="fas fa-rocket" id="nav-icon"></i>
-        <span id="nav-brand-name">GALAXY STORE</span>
+        <i class="fas fa-bolt-lightning" id="ui-sticker"></i> 
+        <span id="ui-name">GALAXY PREMIUM</span>
     </div>
-    
     <ul class="nav-list">
-        <li class="nav-item active" onclick="switchTab('dash', this)"><i class="fas fa-grid-2"></i> Dashboard</li>
-        <li class="nav-item" onclick="switchTab('pos', this)"><i class="fas fa-cash-register"></i> Savdo Paneli</li>
-        <li class="nav-item" onclick="switchTab('inv', this)"><i class="fas fa-warehouse"></i> Omborxona</li>
-        <li class="nav-item" onclick="switchTab('debts', this)"><i class="fas fa-user-tag"></i> Qarzlar</li>
-        <li class="nav-item" onclick="switchTab('costs', this)"><i class="fas fa-wallet"></i> Chiqimlar</li>
-        <li class="nav-item" onclick="switchTab('history', this)"><i class="fas fa-calendar-check"></i> Arhiv</li>
-        <li class="nav-item" onclick="switchTab('settings', this)"><i class="fas fa-gears"></i> Sozlamalar</li>
+        <li class="nav-item active" onclick="tab('dash', this)"><i class="fas fa-house-chimney"></i> Dashboard</li>
+        <li class="nav-item" onclick="tab('sale', this)"><i class="fas fa-cart-shopping"></i> Savdo Paneli</li>
+        <li class="nav-item" onclick="tab('stock', this)"><i class="fas fa-warehouse"></i> Ombor Boshqaruvi</li>
+        <li class="nav-item" onclick="tab('nasiya', this)"><i class="fas fa-hand-holding-dollar"></i> Nasiya Daftari</li>
+        <li class="nav-item" onclick="tab('chiqim', this)"><i class="fas fa-money-bill-transfer"></i> Xarajatlar</li>
+        <li class="nav-item" onclick="tab('arhiv', this)"><i class="fas fa-box-archive"></i> Moliyaviy Arxiv</li>
+        <li class="nav-item" onclick="tab('analytics', this)"><i class="fas fa-chart-pie"></i> Chuqur Analitika</li>
+        <li class="nav-item" onclick="tab('set', this)"><i class="fas fa-gears"></i> Tizim Sozlamalari</li>
     </ul>
-
-    <div class="shutdown-zone">
-        <button class="btn-shutdown" onclick="openEndDayModal()">
-            <i class="fas fa-power-off"></i> KUNNI YAKUNLASH
-        </button>
+    <div style="margin-top: auto; padding: 20px; background: rgba(255,255,255,0.05); border-radius: 20px;">
+        <p style="font-size: 0.7rem; color: #94a3b8;">LITSENZIYA: AKTIV</p>
+        <p style="font-size: 0.8rem; font-weight: 700;">v20.0.4 Enterprise</p>
     </div>
 </nav>
 
+<!-- MAIN CONTENT -->
 <main class="main-content">
-    <header class="top-bar">
-        <h1 id="panel-title" style="font-weight: 800; font-size: 2.2rem;">Dashboard</h1>
-        <div class="clock-box" id="live-clock">00:00:00</div>
+    <header class="header">
+        <h2 id="p-title">Tizim Analitikasi</h2>
+        <div id="clock" class="clock-box">Yuklanmoqda...</div>
     </header>
 
+    <!-- DASHBOARD -->
     <div id="dash" class="panel active">
         <div class="stats-grid">
-            <div class="stat-card kassa">
-                <span class="stat-label">Bugungi Kassa</span>
-                <span class="stat-value" id="val-kassa">0</span>
+            <div class="stat-card">
+                <div class="label">Umumiy Kassa</div>
+                <div class="val" id="st-kassa">0</div>
+                <div style="color: var(--success); font-size: 0.8rem; margin-top: 5px;"><i class="fas fa-arrow-up"></i> Bugun faol</div>
             </div>
-            <div class="stat-card profit">
-                <span class="stat-label">Sof Foyda</span>
-                <span class="stat-value" id="val-profit">0</span>
+            <div class="stat-card">
+                <div class="label">Sof Foyda</div>
+                <div class="val" id="st-profit" style="color:var(--success)">0</div>
+                <div style="color: var(--text-muted); font-size: 0.8rem; margin-top: 5px;">Xarajatlardan tashqari</div>
             </div>
-            <div class="stat-card qarz">
-                <span class="stat-label">Umumiy Qarzlar</span>
-                <span class="stat-value" id="val-qarz">0</span>
+            <div class="stat-card">
+                <div class="label">Olinishi Kerak</div>
+                <div class="val" id="st-qarz" style="color:var(--danger)">0</div>
+                <div style="color: var(--danger); font-size: 0.8rem; margin-top: 5px;">Nasiyalar jami</div>
             </div>
-            <div class="stat-card exp">
-                <span class="stat-label">Jami Chiqim</span>
-                <span class="stat-value" id="val-exp">0</span>
+            <div class="stat-card">
+                <div class="label">Chiqimlar</div>
+                <div class="val" id="st-chiqim" style="color:var(--warning)">0</div>
+                <div style="color: var(--text-muted); font-size: 0.8rem; margin-top: 5px;">Bugun sarflandi</div>
             </div>
         </div>
-
-        <div style="display: grid; grid-template-columns: 1.6fr 1fr; gap: 30px;">
+        
+        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 25px;">
             <div class="card">
-                <h3><i class="fas fa-chart-line" style="color:var(--primary)"></i> Savdo Statistikasi</h3>
-                <div style="height: 300px; margin-top: 20px;">
-                    <canvas id="chart-sales"></canvas>
+                <div class="card-header">
+                    <h3>Savdo Trendi</h3>
+                    <select style="width: 150px; margin:0" id="chart-filter">
+                        <option>Oxirgi 7 kun</option>
+                        <option>Oxirgi 30 kun</option>
+                    </select>
                 </div>
+                <canvas id="mainChart" height="140"></canvas>
             </div>
-            <div class="card" style="border: 2px solid var(--danger); background: #fff1f2;">
-                <h3 style="color:var(--danger)"><i class="fas fa-bell"></i> Ogohlantirishlar</h3>
-                <div id="low-stock-list" style="margin-top:20px; max-height: 280px; overflow-y: auto;">
-                    </div>
+            <div class="card">
+                <h3>Xabarnomalar</h3>
+                <div id="notif-list" style="margin-top: 20px;">
+                    <!-- Ogohlantirishlar shu yerga tushadi -->
+                </div>
             </div>
         </div>
     </div>
 
-    <div id="pos" class="panel">
-        <div style="display: grid; grid-template-columns: 1.5fr 1fr; gap: 30px;">
+    <!-- SAVDO PANELI -->
+    <div id="sale" class="panel">
+        <div style="display:grid; grid-template-columns: 1fr 400px; gap:30px">
             <div class="card">
-                <h3>Yangi Savdo Amali</h3>
-                <div style="margin-top: 25px;">
-                    <div class="form-group">
+                <h3>Yangi Savdo Rasmiylashtirish</h3>
+                <div class="grid-inputs">
+                    <div>
                         <label>Mahsulotni tanlang</label>
-                        <select id="pos-item" onchange="autoFillPrice()"></select>
+                        <select id="s-item" onchange="autoPrice()"></select>
                     </div>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-                        <div class="form-group"><label>Sotuv Narxi</label><input type="number" id="pos-price"></div>
-                        <div class="form-group"><label>Soni</label><input type="number" id="pos-qty" value="1"></div>
+                </div>
+                <div class="grid-inputs">
+                    <div>
+                        <label>Sotuv Narxi (UZS)</label>
+                        <input type="number" id="s-price">
                     </div>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-                        <div class="form-group">
-                            <label>To'lov Turi</label>
-                            <select id="pos-method" onchange="toggleDebtFields()">
-                                <option value="naqd">Naqd Pul</option>
-                                <option value="karta">Plastik Karta</option>
-                                <option value="nasiya">Nasiya (Qarz)</option>
-                            </select>
-                        </div>
-                        <div class="form-group"><label>Mijoz Ismi</label><input type="text" id="pos-client" placeholder="Ism familiya"></div>
+                    <div>
+                        <label>Miqdori</label>
+                        <input type="number" id="s-qty" value="1" oninput="calcSaleTotal()">
                     </div>
-                    <div id="debt-date-box" class="form-group" style="display:none;">
-                        <label>Qaytarish Sanasi</label>
-                        <input type="date" id="pos-due-date">
+                </div>
+                <div class="grid-inputs">
+                    <div>
+                        <label>To'lov Turi</label>
+                        <select id="s-type" onchange="toggleNas()">
+                            <option value="naqd">💵 Naqd Pul</option>
+                            <option value="karta">💳 Plastik Karta</option>
+                            <option value="nasiya">⏳ Nasiya (Qarz)</option>
+                        </select>
                     </div>
-                    <button class="btn btn-success" style="width: 100%; margin-top: 20px; font-size: 1.2rem;" onclick="processSale()">
-                        <i class="fas fa-check-double"></i> SOTUVNI YAKUNLASH
+                    <div>
+                        <label>Mijoz Ismi / Telefon</label>
+                        <input type="text" id="s-client" placeholder="Ism familiya">
+                    </div>
+                </div>
+                <div id="nas-date" style="display:none; margin-top:15px">
+                    <label>Qarzni qaytarish muddati</label>
+                    <input type="date" id="s-due">
+                </div>
+                
+                <div style="margin-top: 30px; padding: 20px; background: var(--main-bg); border-radius: 20px; display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <p style="color: var(--text-muted); font-weight: 600;">UMUMIY SUMMA:</p>
+                        <h2 id="s-total-display" style="color: var(--primary);">0 UZS</h2>
+                    </div>
+                    <button class="btn btn-p" onclick="doSale()" style="padding: 20px 50px;">
+                        <i class="fas fa-check-circle"></i> SOTUVNI TASDIQLASH
                     </button>
                 </div>
             </div>
-            <div class="card" style="background: var(--sidebar); color: white; position: relative;">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <h4>SO'NGI SAVDOLAR</h4>
-                    <span id="pos-timer" style="font-size: 0.8rem; opacity: 0.5;"></span>
-                </div>
-                <div id="pos-mini-log" style="margin-top: 25px; max-height: 450px; overflow-y: auto;">
-                    </div>
-            </div>
-        </div>
-    </div>
 
-    <div id="inv" class="panel">
-        <div class="card">
-            <h3><i class="fas fa-plus-circle"></i> Yangi Tovar Kirimi</h3>
-            <div style="display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 15px; margin-top: 20px;">
-                <input type="text" id="inv-name" placeholder="Mahsulot nomi">
-                <input type="number" id="inv-cost" placeholder="Tan narxi">
-                <input type="number" id="inv-qty" placeholder="Soni">
-                <button class="btn btn-primary" onclick="addToInventory()">QABUL QILISH</button>
-            </div>
-        </div>
-        <div class="card">
-            <div class="table-container">
-                <table>
-                    <thead>
-                        <tr><th>Mahsulot</th><th>Tan Narxi</th><th>Zaxira</th><th>Holat</th><th>Amal</th></tr>
-                    </thead>
-                    <tbody id="inv-table-body"></tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    <div id="debts" class="panel">
-        <div class="card">
-            <h3><i class="fas fa-user-clock"></i> Faol Nasiyalar Ro'yxati</h3>
-            <div class="table-container">
-                <table>
-                    <thead>
-                        <tr><th>Mijoz</th><th>Summa</th><th>Muddat</th><th>Holat</th><th>Boshqaruv</th></tr>
-                    </thead>
-                    <tbody id="debt-table-body"></tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    <div id="costs" class="panel">
-        <div class="card">
-            <h3><i class="fas fa-arrow-right-from-bracket"></i> Ma'muriy Chiqimlar</h3>
-            <div style="display: grid; grid-template-columns: 2.5fr 1fr 1fr; gap: 15px; margin-top: 20px;">
-                <input type="text" id="cost-desc" placeholder="Chiqim sababi (Masalan: Tushlik, Ijara...)">
-                <input type="number" id="cost-amt" placeholder="Summa">
-                <button class="btn btn-danger" onclick="registerExpense()">CHIQIMNI SAQLASH</button>
-            </div>
-        </div>
-        <div class="card">
-            <div class="table-container">
-                <table>
-                    <thead>
-                        <tr><th>Sabab</th><th>Summa</th><th>Vaqt</th><th>Amal</th></tr>
-                    </thead>
-                    <tbody id="cost-table-body"></tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    <div id="history" class="panel">
-        <div class="card">
-            <h3><i class="fas fa-layer-group"></i> Yopilgan Kunlar Arvixi</h3>
-            <div class="table-container">
-                <table>
-                    <thead>
-                        <tr><th>Sana</th><th>Tushum</th><th>Sof Foyda</th><th>Chiqim</th><th>Hisobot</th></tr>
-                    </thead>
-                    <tbody id="history-table-body"></tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    <div id="settings" class="panel">
-        <div class="card">
-            <h3><i class="fas fa-sliders-h"></i> Tizim Sozlamalari</h3>
-            
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-top: 30px;">
-                <div>
-                    <div class="form-group">
-                        <label>Do'kon Nomi</label>
-                        <input type="text" id="set-store-name">
-                    </div>
-                    <div class="form-group">
-                        <label>Xavfsizlik PIN-kodi (4 ta raqam)</label>
-                        <input type="password" id="set-pin" maxlength="4">
-                    </div>
-                    <button class="btn btn-primary" style="width: 100%; margin-top: 20px;" onclick="saveCoreSettings()">
-                        ASOSIY MA'LUMOTLARNI SAQLASH
-                    </button>
-                </div>
-
-                <div>
-                    <label>Brending (Mavzu & Ikonka)</label>
-                    <div class="theme-picker">
-                        <div class="theme-circle" style="background:#6366f1" onclick="applyTheme('theme-indigo')"></div>
-                        <div class="theme-circle" style="background:#10b981" onclick="applyTheme('theme-emerald')"></div>
-                        <div class="theme-circle" style="background:#f43f5e" onclick="applyTheme('theme-rose')"></div>
-                        <div class="theme-circle" style="background:#f59e0b" onclick="applyTheme('theme-amber')"></div>
-                        <div class="theme-circle" style="background:#1e293b" onclick="applyTheme('theme-dark')"></div>
-                    </div>
-                    <div class="icon-grid">
-                        <div class="icon-box" onclick="applyIcon('fa-rocket')"><i class="fas fa-rocket"></i></div>
-                        <div class="icon-box" onclick="applyIcon('fa-crown')"><i class="fas fa-crown"></i></div>
-                        <div class="icon-box" onclick="applyIcon('fa-gem')"><i class="fas fa-gem"></i></div>
-                        <div class="icon-box" onclick="applyIcon('fa-shop')"><i class="fas fa-shop"></i></div>
-                        <div class="icon-box" onclick="applyIcon('fa-bolt')"><i class="fas fa-bolt"></i></div>
-                        <div class="icon-box" onclick="applyIcon('fa-star')"><i class="fas fa-star"></i></div>
-                    </div>
+            <div class="card" style="background: var(--sidebar-bg); color: white;">
+                <h4>JORIY KASSA HOLATI</h4>
+                <h1 id="mini-kassa" style="color: var(--success); font-size: 2.5rem; margin: 20px 0;">0</h1>
+                <hr style="opacity: 0.1; margin-bottom: 20px;">
+                <h4>OXIRGI AMALLAR</h4>
+                <div id="recent-sales" style="margin-top: 15px; font-size: 0.85rem;">
+                    <!-- Oxirgi 5 ta sotuv -->
                 </div>
             </div>
         </div>
+    </div>
 
-        <div class="card" style="border: 1px solid var(--warning);">
-            <h3 style="color:var(--warning)">Xavfli Hudud</h3>
-            <p style="color:var(--text-muted); margin: 10px 0;">Barcha ma'lumotlarni o'chirib yuborish (tavsiya etilmaydi).</p>
-            <button class="btn btn-danger" style="background:transparent; color:var(--danger); border: 2px solid var(--danger);" onclick="factoryReset()">
-                TIZIMNI TOZALASH
-            </button>
+    <!-- OMBOR -->
+    <div id="stock" class="panel">
+        <div class="card">
+            <div class="card-header">
+                <h3>Yangi Tovar Qabul Qilish</h3>
+                <button class="btn btn-s" onclick="exportStockXLS()"><i class="fas fa-file-excel"></i> Eksport</button>
+            </div>
+            <div class="grid-inputs">
+                <input type="text" id="o-name" placeholder="Tovar nomi">
+                <input type="number" id="o-cost" placeholder="Tan narxi (dona)">
+                <input type="number" id="o-qty" placeholder="Soni">
+                <button class="btn btn-p" onclick="addStock()">OMBIDGA QO'SHISH</button>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="search-container">
+                <i class="fas fa-search"></i>
+                <input type="text" id="stock-search" class="search-input" placeholder="Ombordan tovar qidirish..." oninput="filterTable('stock-table', this.value)">
+            </div>
+            <table id="stock-table">
+                <thead>
+                    <tr>
+                        <th>Tovar Nomi</th>
+                        <th>Tan Narxi</th>
+                        <th>Sotuv Narxi (Est.)</th>
+                        <th>Ombordagi Qoldiq</th>
+                        <th>Amallar</th>
+                    </tr>
+                </thead>
+                <tbody id="stock-tbody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- NASIYA -->
+    <div id="nasiya" class="panel">
+        <div class="card">
+            <div class="card-header">
+                <h3>Qarzlar va Nasiyalar Nazorati</h3>
+                <div class="badge bg-red" id="qarz-count">0 ta aktiv qarz</div>
+            </div>
+            <div class="search-container">
+                <i class="fas fa-search"></i>
+                <input type="text" class="search-input" placeholder="Mijoz ismi bo'yicha qidirish..." oninput="filterTable('nas-table', this.value)">
+            </div>
+            <table id="nas-table">
+                <thead>
+                    <tr>
+                        <th>Mijoz</th>
+                        <th>Qarz Summasi</th>
+                        <th>Sotilgan Sana</th>
+                        <th>Qaytarish Muddati</th>
+                        <th>Holati</th>
+                        <th>Amal</th>
+                    </tr>
+                </thead>
+                <tbody id="nas-tbody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- CHIQIM -->
+    <div id="chiqim" class="panel">
+        <div class="card">
+            <h3>Xarajatlarni Qayd Etish</h3>
+            <div class="grid-inputs">
+                <input type="text" id="x-desc" placeholder="Xarajat sababi (masalan: ijara, tushlik...)">
+                <input type="number" id="x-amt" placeholder="Summa">
+                <button class="btn btn-d" onclick="addExpense()">CHIQUVNI SAQLASH</button>
+            </div>
+        </div>
+        <div class="card">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Sabab / Izoh</th>
+                        <th>Sarflangan Summa</th>
+                        <th>Vaqti</th>
+                    </tr>
+                </thead>
+                <tbody id="x-tbody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ARHIV -->
+    <div id="arhiv" class="panel">
+        <div class="card">
+            <h3>Yopilgan Kunlar Tarixi</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Sana</th>
+                        <th>Kassa</th>
+                        <th>Foyda</th>
+                        <th>Xarajat</th>
+                        <th>Hisobot</th>
+                    </tr>
+                </thead>
+                <tbody id="day-tbody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- SOZLAMALAR -->
+    <div id="set" class="panel">
+        <div class="card">
+            <h3>Tizim Konfiguratsiyasi</h3>
+            <div style="max-width: 600px; margin-top: 20px;">
+                <label>Do'kon yoki Korxona Nomi</label>
+                <input type="text" id="set-n">
+                
+                <label style="display:block; margin-top:20px">Interfeys Rangli Mavzusi</label>
+                <div style="display:flex; gap:15px; margin-top:10px">
+                    <div class="action-btn" style="background:#6366f1" onclick="setTheme('theme-indigo')" title="Indigo"></div>
+                    <div class="action-btn" style="background:#10b981" onclick="setTheme('theme-emerald')" title="Emerald"></div>
+                    <div class="action-btn" style="background:#f43f5e" onclick="setTheme('theme-rose')" title="Rose"></div>
+                    <div class="action-btn" style="background:#f59e0b" onclick="setTheme('theme-amber')" title="Amber"></div>
+                </div>
+
+                <label style="display:block; margin-top:25px">Xavfsizlik PIN kodi (4 xonali)</label>
+                <input type="password" id="set-pin" maxlength="4" placeholder="Yangi PIN">
+
+                <button class="btn btn-p" style="margin-top:30px; width: 100%;" onclick="saveSettings()">
+                    <i class="fas fa-floppy-disk"></i> SOZLAMALARNI SAQLASH
+                </button>
+            </div>
         </div>
     </div>
 </main>
 
-<div id="end-day-modal" class="modal-overlay">
-    <div class="modal-content">
-        <div style="font-size: 4rem; margin-bottom: 15px;">🏁</div>
-        <h2>KUNNI YAKUNLASH</h2>
-        <div id="z-report-data" style="margin: 25px 0; background: var(--bg); padding: 25px; border-radius: 20px; text-align: left; line-height: 2;">
-            </div>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-            <button class="btn btn-success" onclick="closeDayProcess('excel')">
-                <i class="fas fa-file-excel"></i> Excel & Yopish
-            </button>
-            <button class="btn btn-primary" onclick="closeDayProcess('pdf')">
-                <i class="fas fa-file-pdf"></i> PDF & Yopish
-            </button>
+<!-- ACTION BAR -->
+<aside class="action-bar">
+    <div class="action-btn btn-lock" onclick="lockSys()" title="Tizimni Qulflash">
+        <i class="fas fa-lock"></i>
+    </div>
+    <div class="action-btn btn-backup" onclick="exportDB()" title="Ma'lumotlarni Nusxalash">
+        <i class="fas fa-cloud-arrow-down"></i>
+    </div>
+    <div style="flex:1"></div>
+    <div class="action-btn btn-close-shop" onclick="openZReport()" title="Kunni Yakunlash">
+        <i class="fas fa-power-off"></i>
+    </div>
+</aside>
+
+<!-- MODALS -->
+<div id="z-modal" class="modal">
+    <div class="modal-body">
+        <i class="fas fa-flag-checkered fa-3x" style="color: var(--primary); margin-bottom: 20px;"></i>
+        <h2>KUNLIK HISOBOT</h2>
+        <div id="z-content" style="text-align:left; background:#f8fafc; padding:25px; border-radius:20px; margin:25px 0; line-height:2.2; font-weight:600;">
+            <!-- Hisobot matni -->
         </div>
-        <p style="margin-top: 25px; color: var(--text-muted); cursor: pointer; font-weight: 600;" onclick="closeEndDayModal()">
-            BEKOR QILISH
-        </p>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px">
+            <button class="btn btn-s" onclick="finishDay('excel')"><i class="fas fa-file-excel"></i> Excel & Yopish</button>
+            <button class="btn btn-p" onclick="finishDay('pdf')"><i class="fas fa-file-pdf"></i> PDF & Yopish</button>
+        </div>
+        <p style="margin-top:20px; cursor:pointer; color:var(--text-muted); font-weight:600;" onclick="closeModal('z-modal')">BEKOR QILISH</p>
     </div>
 </div>
 
 <script>
-    /**
-     * GALAXY ERP v18 - CORE LOGIC
-     */
+    /* 
+       GALAXY ERP v20.0 - CORE ENGINE
+       Developed with high-performance algorithms for retail management.
+    */
 
-    // 1. DATA INITIALIZATION
-    let core = JSON.parse(localStorage.getItem('galaxy_v18_core')) || {
-        settings: { pin: "0303", name: "GALAXY STORE", theme: "theme-indigo", icon: "fa-rocket" },
-        inventory: [],
-        salesHistory: [], // Faqat joriy kun uchun
-        debts: [],
-        expenses: [], // Faqat joriy kun uchun
-        archive: [], // Yopilgan kunlar
-        dailyStats: { kassa: 0, profit: 0, cost: 0 }
+    // --- DATABASE INITIALIZATION ---
+    let db = JSON.parse(localStorage.getItem('galaxy_v20_db')) || {
+        conf: { pin: "0303", name: "GALAXY STORE", theme: "theme-indigo", sticker: "fa-bolt-lightning" },
+        stock: [], 
+        history: [], 
+        nasiya: [], 
+        expenses: [], 
+        days: [],
+        session: { kassa: 0, profit: 0, expense: 0 }
     };
 
-    // 2. BOOTSTRAP
-    window.onload = () => {
-        setupClock();
-        checkAuth();
-        applyCurrentSettings();
+    // --- AUDIO HELPER ---
+    function speak(text) {
+        const synth = window.speechSynthesis;
+        const utter = new SpeechSynthesisUtterance(text);
+        utter.lang = 'tr-TR'; // O'zbekchaga yaqinroq talaffuz uchun
+        utter.rate = 0.9;
+        synth.speak(utter);
+    }
+
+    // --- SECURITY SYSTEM ---
+    document.getElementById('pin-input').addEventListener('input', function() {
+        if(this.value === db.conf.pin) {
+            document.getElementById('login-overlay').style.transform = 'translateY(-100%)';
+            setTimeout(() => {
+                document.getElementById('login-overlay').style.display = 'none';
+                initApp();
+            }, 600);
+        }
+    });
+
+    function lockSys() {
+        document.getElementById('pin-input').value = '';
+        document.getElementById('login-overlay').style.display = 'flex';
+        setTimeout(() => document.getElementById('login-overlay').style.transform = 'translateY(0)', 10);
+    }
+
+    // --- CORE APP ENGINE ---
+    function initApp() {
         renderAll();
-    };
+        startClock();
+        initChart();
+        checkStockAlerts();
+        
+        // Load settings
+        document.getElementById('ui-name').innerText = db.conf.name;
+        document.getElementById('set-n').value = db.conf.name;
+        document.body.className = db.conf.theme;
+    }
 
-    function setupClock() {
+    function startClock() {
         setInterval(() => {
             const now = new Date();
-            document.getElementById('live-clock').innerText = now.toLocaleTimeString();
+            document.getElementById('clock').innerText = now.toLocaleString('uz-UZ');
         }, 1000);
     }
 
-    function checkAuth() {
-        const pinInput = document.getElementById('main-pin');
-        pinInput.addEventListener('input', (e) => {
-            if (e.target.value === core.settings.pin) {
-                document.getElementById('auth-screen').style.transition = '0.8s';
-                document.getElementById('auth-screen').style.opacity = '0';
-                setTimeout(() => {
-                    document.getElementById('auth-screen').style.display = 'none';
-                    initCharts();
-                }, 800);
+    const fmt = (num) => new Intl.NumberFormat('uz-UZ').format(num) + " UZS";
+
+    // --- NAVIGATION ---
+    function tab(panelId, el) {
+        document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+        
+        document.getElementById(panelId).classList.add('active');
+        el.classList.add('active');
+        document.getElementById('p-title').innerText = el.innerText.trim();
+
+        if(panelId === 'dash') initChart();
+    }
+
+    // --- STOCK MANAGEMENT ---
+    function addStock() {
+        const name = document.getElementById('o-name').value;
+        const cost = parseFloat(document.getElementById('o-cost').value);
+        const qty = parseInt(document.getElementById('o-qty').value);
+
+        if(!name || isNaN(cost) || isNaN(qty)) {
+            return Swal.fire('Xato', 'Ma’lumotlarni to‘liq kiriting!', 'error');
+        }
+
+        const existing = db.stock.find(i => i.name.toLowerCase() === name.toLowerCase());
+        if(existing) {
+            existing.qty += qty;
+            existing.cost = cost; // Update cost if changed
+        } else {
+            db.stock.push({ id: Date.now(), name, cost, qty, min: 10 });
+        }
+
+        save();
+        Swal.fire('Muvaffaqiyatli', 'Tovar omborga qo‘shildi', 'success');
+        ['o-name', 'o-cost', 'o-qty'].forEach(id => document.getElementById(id).value = '');
+    }
+
+    function deleteStock(id) {
+        Swal.fire({
+            title: 'Ishonchingiz komilmi?',
+            text: "Bu tovar ombordan butunlay o'chiriladi!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Ha, o‘chirish'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                db.stock = db.stock.filter(i => i.id !== id);
+                save();
             }
         });
     }
 
-    function applyCurrentSettings() {
-        document.body.className = core.settings.theme;
-        document.getElementById('nav-brand-name').innerText = core.settings.name;
-        document.getElementById('nav-icon').className = 'fas ' + core.settings.icon;
-        document.getElementById('set-store-name').value = core.settings.name;
-    }
-
-    // 3. UI CONTROLS
-    function switchTab(id, el) {
-        document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-        document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
-        
-        document.getElementById(id).classList.add('active');
-        el.classList.add('active');
-        document.getElementById('panel-title').innerText = el.innerText.trim();
-        
-        if (id === 'dash') initCharts();
-        renderAll();
-    }
-
-    // 4. POS LOGIC (SAVDO)
-    function autoFillPrice() {
-        const id = document.getElementById('pos-item').value;
-        const item = core.inventory.find(x => x.id == id);
-        if (item) {
-            // Avtomatik 25% ustama bilan chiqaradi
-            document.getElementById('pos-price').value = Math.round(item.cost * 1.25);
+    // --- SALE LOGIC ---
+    function autoPrice() {
+        const select = document.getElementById('s-item');
+        const item = db.stock.find(x => x.id == select.value);
+        if(item) {
+            // Standart 25% ustama narx taklif qilish
+            document.getElementById('s-price').value = Math.round(item.cost * 1.25);
+            calcSaleTotal();
         }
     }
 
-    function toggleDebtFields() {
-        const method = document.getElementById('pos-method').value;
-        document.getElementById('debt-date-box').style.display = (method === 'nasiya') ? 'block' : 'none';
+    function calcSaleTotal() {
+        const p = document.getElementById('s-price').value;
+        const q = document.getElementById('s-qty').value;
+        document.getElementById('s-total-display').innerText = fmt(p * q);
     }
 
-    function processSale() {
-        const itemId = document.getElementById('pos-item').value;
-        const price = parseFloat(document.getElementById('pos-price').value);
-        const qty = parseInt(document.getElementById('pos-qty').value);
-        const method = document.getElementById('pos-method').value;
-        const client = document.getElementById('pos-client').value || "Noma'lum Mijoz";
-        const dueDate = document.getElementById('pos-due-date').value;
+    function toggleNas() {
+        const type = document.getElementById('s-type').value;
+        document.getElementById('nas-date').style.display = (type === 'nasiya') ? 'block' : 'none';
+    }
 
-        const item = core.inventory.find(x => x.id == itemId);
+    function doSale() {
+        const itemId = document.getElementById('s-item').value;
+        const price = parseFloat(document.getElementById('s-price').value);
+        const qty = parseInt(document.getElementById('s-qty').value);
+        const type = document.getElementById('s-type').value;
+        const client = document.getElementById('s-client').value || "Noma'lum Mijoz";
 
-        if (!item || item.qty < qty) {
-            return alert("Omborda yetarli mahsulot yo'q!");
-        }
+        const item = db.stock.find(i => i.id == itemId);
+
+        if(!item || isNaN(price) || qty <= 0) return Swal.fire('Xato', 'Sotuv ma’lumotlari noto‘g‘ri', 'error');
+        if(item.qty < qty) return Swal.fire('Xato', 'Omborda yetarli tovar yo‘q!', 'warning');
 
         const total = price * qty;
         const profit = (price - item.cost) * qty;
 
-        // Ombor yangilash
+        // Process Stock
         item.qty -= qty;
 
-        // Tarixga yozish
-        const saleEntry = {
-            id: Date.now(),
-            time: new Date().toLocaleTimeString(),
-            name: item.name,
-            total: total,
-            profit: profit,
-            method: method,
-            client: client
-        };
-
-        if (method === 'nasiya') {
-            core.debts.push({
+        // Process Financials
+        if(type === 'nasiya') {
+            const dueDate = document.getElementById('s-due').value;
+            db.nasiya.push({
                 id: Date.now(),
-                client: client,
-                amount: total,
+                client,
+                item: item.name,
+                amt: total,
+                profit: profit,
+                date: new Date().toLocaleDateString(),
                 due: dueDate || 'Belgilanmagan',
-                status: 'pending'
+                status: 'to\'lanmagan'
             });
         } else {
-            core.dailyStats.kassa += total;
-            core.dailyStats.profit += profit;
+            db.session.kassa += total;
+            db.session.profit += profit;
         }
 
-        core.salesHistory.unshift(saleEntry);
-        saveAndRender();
-        speak("Sotildi");
+        // Record History
+        db.history.unshift({
+            time: new Date().toLocaleString(),
+            name: item.name,
+            qty,
+            total,
+            type,
+            client
+        });
+
+        save();
+        speak("Muvaffaqiyatli sotildi");
+        Swal.fire({
+            title: 'Sotildi!',
+            text: `Jami: ${fmt(total)}`,
+            icon: 'success',
+            timer: 1500
+        });
         
-        // Formani tozalash
-        document.getElementById('pos-qty').value = 1;
-        document.getElementById('pos-client').value = '';
+        // Reset inputs
+        ['s-price', 's-qty', 's-client'].forEach(id => document.getElementById(id).value = '');
     }
 
-    // 5. INVENTORY LOGIC
-    function addToInventory() {
-        const name = document.getElementById('inv-name').value;
-        const cost = parseFloat(document.getElementById('inv-cost').value);
-        const qty = parseInt(document.getElementById('inv-qty').value);
+    // --- EXPENSES ---
+    function addExpense() {
+        const desc = document.getElementById('x-desc').value;
+        const amt = parseFloat(document.getElementById('x-amt').value);
 
-        if (name && cost && qty) {
-            core.inventory.push({ id: Date.now(), name, cost, qty });
-            saveAndRender();
-            ['inv-name', 'inv-cost', 'inv-qty'].forEach(id => document.getElementById(id).value = '');
-            alert("Tovar qabul qilindi.");
+        if(!desc || isNaN(amt)) return;
+
+        db.expenses.unshift({ desc, amt, time: new Date().toLocaleTimeString() });
+        db.session.kassa -= amt;
+        db.session.expense += amt;
+
+        save();
+        document.getElementById('x-desc').value = '';
+        document.getElementById('x-amt').value = '';
+    }
+
+    // --- NASIYA ACTIONS ---
+    function payNasiya(id) {
+        const qarz = db.nasiya.find(n => n.id === id);
+        if(qarz) {
+            db.session.kassa += qarz.amt;
+            db.session.profit += qarz.profit;
+            qarz.status = 'to\'landi';
+            save();
+            Swal.fire('Qarz yopildi', 'Mablag‘ kassaga qo‘shildi', 'success');
         }
     }
 
-    // 6. EXPENSES LOGIC
-    function registerExpense() {
-        const desc = document.getElementById('cost-desc').value;
-        const amt = parseFloat(document.getElementById('cost-amt').value);
-
-        if (desc && amt) {
-            core.expenses.unshift({ id: Date.now(), desc, amt, time: new Date().toLocaleTimeString() });
-            core.dailyStats.kassa -= amt;
-            core.dailyStats.cost += amt;
-            saveAndRender();
-            document.getElementById('cost-desc').value = '';
-            document.getElementById('cost-amt').value = '';
-        }
-    }
-
-    // 7. DEBT MANAGEMENT
-    function collectDebt(id) {
-        const idx = core.debts.findIndex(d => d.id === id);
-        if (idx > -1) {
-            const d = core.debts[idx];
-            core.dailyStats.kassa += d.amount;
-            d.status = 'paid';
-            saveAndRender();
-            alert("Qarz to'landi!");
-        }
-    }
-
-    // 8. SETTINGS ACTIONS
-    function applyTheme(t) { core.settings.theme = t; saveAndRender(); }
-    function applyIcon(i) { core.settings.icon = i; saveAndRender(); }
-    function saveCoreSettings() {
-        core.settings.name = document.getElementById('set-store-name').value;
-        const newPin = document.getElementById('set-pin').value;
-        if (newPin.length === 4) core.settings.pin = newPin;
-        saveAndRender();
-        alert("Sozlamalar saqlandi!");
-    }
-
-    // 9. RENDER FUNCTIONS
+    // --- DATA RENDERING ---
     function renderAll() {
-        const fmt = (v) => new Intl.NumberFormat('uz-UZ').format(v) + " UZS";
+        // Dashboard Stats
+        document.getElementById('st-kassa').innerText = fmt(db.session.kassa);
+        document.getElementById('st-profit').innerText = fmt(db.session.profit);
+        document.getElementById('st-chiqim').innerText = fmt(db.session.expense);
+        document.getElementById('mini-kassa').innerText = fmt(db.session.kassa);
 
-        // Dash Stats
-        document.getElementById('val-kassa').innerText = fmt(core.dailyStats.kassa);
-        document.getElementById('val-profit').innerText = fmt(core.dailyStats.profit);
-        document.getElementById('val-exp').innerText = fmt(core.dailyStats.cost);
-        
-        const activeDebts = core.debts.filter(d => d.status === 'pending').reduce((a, b) => a + b.amount, 0);
-        document.getElementById('val-qarz').innerText = fmt(activeDebts);
+        const activeQarz = db.nasiya.filter(n => n.status === 'to\'lanmagan');
+        const qarzTotal = activeQarz.reduce((a, b) => a + b.amt, 0);
+        document.getElementById('st-qarz').innerText = fmt(qarzTotal);
+        document.getElementById('qarz-count').innerText = `${activeQarz.length} ta aktiv qarz`;
 
-        // Low Stock Alert
-        const lowStockList = document.getElementById('low-stock-list');
-        lowStockList.innerHTML = '';
-        core.inventory.filter(i => i.qty < 15).forEach(i => {
-            lowStockList.innerHTML += `
-                <div style="background:white; padding:15px; border-radius:15px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center; border-left:5px solid var(--danger);">
-                    <b>${i.name}</b>
-                    <span class="badge badge-red">${i.qty} dona qoldi</span>
-                </div>`;
-        });
-
-        // POS Select & Mini Log
-        const posSel = document.getElementById('pos-item');
-        posSel.innerHTML = '<option value="">Mahsulotni tanlang...</option>';
-        core.inventory.forEach(i => {
-            posSel.innerHTML += `<option value="${i.id}">${i.name} (Zaxira: ${i.qty})</option>`;
-        });
-
-        const miniLog = document.getElementById('pos-mini-log');
-        miniLog.innerHTML = '';
-        core.salesHistory.slice(0, 8).forEach(s => {
-            miniLog.innerHTML += `
-                <div style="padding:15px; border-bottom:1px solid rgba(255,255,255,0.1); display:flex; justify-content:space-between;">
-                    <div><b>${s.name}</b><br><small style="opacity:0.5">${s.time} - ${s.client}</small></div>
-                    <div style="color:var(--success); font-weight:800">${fmt(s.total)}</div>
-                </div>`;
-        });
-
-        // Inventory Table
-        const invTable = document.getElementById('inv-table-body');
-        invTable.innerHTML = '';
-        core.inventory.forEach(i => {
-            invTable.innerHTML += `
+        // Stock Table
+        const stockBody = document.getElementById('stock-tbody');
+        stockBody.innerHTML = '';
+        db.stock.forEach(i => {
+            stockBody.innerHTML += `
                 <tr>
-                    <td><b>${i.name}</b></td>
+                    <td>${i.name}</td>
                     <td>${fmt(i.cost)}</td>
-                    <td style="font-weight:800; color:${i.qty < 15 ? 'red' : 'inherit'}">${i.qty}</td>
-                    <td><span class="badge ${i.qty < 15 ? 'badge-red' : 'badge-green'}">${i.qty < 15 ? 'Kam' : 'Yetarli'}</span></td>
-                    <td><button onclick="deleteInventory(${i.id})" style="border:none; color:red; cursor:pointer;">O'chirish</button></td>
-                </tr>`;
+                    <td>${fmt(i.cost * 1.25)}</td>
+                    <td>
+                        <span class="badge ${i.qty < 10 ? 'bg-red' : 'bg-green'}">${i.qty} dona</span>
+                    </td>
+                    <td>
+                        <button class="btn btn-d" style="padding: 5px 10px;" onclick="deleteStock(${i.id})"><i class="fas fa-trash"></i></button>
+                    </td>
+                </tr>
+            `;
         });
 
-        // Debt Table
-        const debtTable = document.getElementById('debt-table-body');
-        debtTable.innerHTML = '';
-        core.debts.forEach(d => {
-            debtTable.innerHTML += `
+        // Nasiya Table
+        const nasBody = document.getElementById('nas-tbody');
+        nasBody.innerHTML = '';
+        db.nasiya.forEach(n => {
+            nasBody.innerHTML += `
                 <tr>
-                    <td>${d.client}</td>
-                    <td><b>${fmt(d.amount)}</b></td>
-                    <td>${d.due}</td>
-                    <td><span class="badge ${d.status === 'paid' ? 'badge-green' : 'badge-red'}">${d.status === 'paid' ? 'To\'langan' : 'Kutilmoqda'}</span></td>
-                    <td>${d.status === 'pending' ? `<button class="btn-success badge" onclick="collectDebt(${d.id})">Yopish</button>` : 'OK'}</td>
-                </tr>`;
+                    <td>${n.client} <br><small style="color:gray">${n.item}</small></td>
+                    <td>${fmt(n.amt)}</td>
+                    <td>${n.date}</td>
+                    <td>${n.due}</td>
+                    <td><span class="badge ${n.status==='to\'landi'?'bg-green':'bg-red'}">${n.status}</span></td>
+                    <td>
+                        ${n.status === 'to\'lanmagan' ? `<button class="btn btn-s" style="padding:5px 10px" onclick="payNasiya(${n.id})">To'ladi</button>` : '<i class="fas fa-check-double text-success"></i>'}
+                    </td>
+                </tr>
+            `;
         });
 
-        // Cost Table
-        const costTable = document.getElementById('cost-table-body');
-        costTable.innerHTML = '';
-        core.expenses.forEach(e => {
-            costTable.innerHTML += `<tr><td>${e.desc}</td><td>${fmt(e.amt)}</td><td>${e.time}</td><td><i class="fas fa-trash" style="color:red; cursor:pointer" onclick="deleteExpense(${e.id})"></i></td></tr>`;
+        // Expenses Table
+        const xBody = document.getElementById('x-tbody');
+        xBody.innerHTML = '';
+        db.expenses.forEach(x => {
+            xBody.innerHTML += `<tr><td>${x.desc}</td><td>${fmt(x.amt)}</td><td>${x.time}</td></tr>`;
         });
 
-        // History Table
-        const histTable = document.getElementById('history-table-body');
-        histTable.innerHTML = '';
-        core.archive.forEach(a => {
-            histTable.innerHTML += `
+        // History Table (Arhiv)
+        const dBody = document.getElementById('day-tbody');
+        dBody.innerHTML = '';
+        db.days.forEach(d => {
+            dBody.innerHTML += `
                 <tr>
-                    <td>${a.date}</td>
-                    <td>${fmt(a.kassa)}</td>
-                    <td style="color:var(--success); font-weight:bold;">${fmt(a.profit)}</td>
-                    <td style="color:var(--danger);">${fmt(a.cost)}</td>
-                    <td><button onclick="alert('Batafsil hisobot PDF shaklda saqlangan')">Ochish</button></td>
-                </tr>`;
+                    <td>${d.date}</td>
+                    <td>${fmt(d.kassa)}</td>
+                    <td>${fmt(d.profit)}</td>
+                    <td>${fmt(d.exp)}</td>
+                    <td><button class="btn btn-w" onclick="alert('PDF yaratilmoqda...')"><i class="fas fa-file-pdf"></i></button></td>
+                </tr>
+            `;
         });
 
-        applyCurrentSettings();
+        // Sale Item Select
+        const sSelect = document.getElementById('s-item');
+        const currentVal = sSelect.value;
+        sSelect.innerHTML = '<option value="">Tanlang...</option>';
+        db.stock.forEach(i => {
+            if(i.qty > 0) sSelect.innerHTML += `<option value="${i.id}">${i.name} (${i.qty} ta bor)</option>`;
+        });
+        sSelect.value = currentVal;
+
+        // Recent Sales in Sidebar
+        const recentBox = document.getElementById('recent-sales');
+        recentBox.innerHTML = '';
+        db.history.slice(0, 5).forEach(h => {
+            recentBox.innerHTML += `
+                <div style="margin-bottom:10px; padding:10px; background:rgba(255,255,255,0.05); border-radius:10px">
+                    <b>${h.name}</b> <br> ${fmt(h.total)} - ${h.type}
+                </div>
+            `;
+        });
     }
 
-    // 10. SYSTEM FUNCTIONS
-    function saveAndRender() {
-        localStorage.setItem('galaxy_v18_core', JSON.stringify(core));
-        renderAll();
+    // --- SEARCH FILTR ---
+    function filterTable(tableId, query) {
+        const rows = document.querySelectorAll(`#${tableId} tbody tr`);
+        rows.forEach(row => {
+            row.style.display = row.innerText.toLowerCase().includes(query.toLowerCase()) ? '' : 'none';
+        });
     }
 
-    function deleteInventory(id) { if(confirm('Ochirish?')) { core.inventory = core.inventory.filter(x => x.id !== id); saveAndRender(); } }
-    function deleteExpense(id) { core.expenses = core.expenses.filter(x => x.id !== id); saveAndRender(); }
+    // --- CHARTS ---
+    let myChart;
+    function initChart() {
+        const ctx = document.getElementById('mainChart').getContext('2d');
+        if(myChart) myChart.destroy();
 
-    function openEndDayModal() {
-        const fmt = (v) => new Intl.NumberFormat('uz-UZ').format(v) + " UZS";
-        document.getElementById('z-report-data').innerHTML = `
-            <b>Sana:</b> ${new Date().toLocaleDateString()}<br>
-            <b>Jami Savdo:</b> ${fmt(core.dailyStats.kassa)}<br>
-            <b>Sof Foyda:</b> ${fmt(core.dailyStats.profit)}<br>
-            <b>Xarajatlar:</b> ${fmt(core.dailyStats.cost)}<br>
-            <b>Nasiyalar soni:</b> ${core.debts.filter(d=>d.status==='pending').length} ta
-        `;
-        document.getElementById('end-day-modal').style.display = 'flex';
-    }
+        // Arhivdan so'nggi 7 kunlik ma'lumotni olish
+        const labels = db.days.slice(0, 7).map(d => d.date).reverse();
+        const data = db.days.slice(0, 7).map(d => d.kassa).reverse();
 
-    function closeEndDayModal() { document.getElementById('end-day-modal').style.display = 'none'; }
-
-    function closeDayProcess(type) {
-        // Kunni Arhivlash
-        const dayRecord = {
-            date: new Date().toLocaleDateString(),
-            kassa: core.dailyStats.kassa,
-            profit: core.dailyStats.profit,
-            cost: core.dailyStats.cost,
-            sales: [...core.salesHistory]
-        };
-        core.archive.unshift(dayRecord);
-
-        // Kassani tozalash
-        core.dailyStats = { kassa: 0, profit: 0, cost: 0 };
-        core.salesHistory = [];
-        core.expenses = [];
-
-        saveAndRender();
-        closeEndDayModal();
-        speak("Kun yakunlandi. Hisobot tayyor.");
-        alert("Bugungi ish kuni muvaffaqiyatli yopildi!");
-    }
-
-    function speak(txt) {
-        const msg = new SpeechSynthesisUtterance(txt);
-        msg.lang = 'tr-TR'; 
-        window.speechSynthesis.speak(msg);
-    }
-
-    function factoryReset() {
-        if(confirm("DIQQAT! Barcha ma'lumotlar butunlay o'chib ketadi. Rozimisiz?")) {
-            localStorage.removeItem('galaxy_v18_core');
-            location.reload();
+        if(labels.length === 0) {
+            labels.push(new Date().toLocaleDateString());
+            data.push(db.session.kassa);
         }
-    }
 
-    // 11. CHARTS
-    let salesChart;
-    function initCharts() {
-        const ctx = document.getElementById('chart-sales').getContext('2d');
-        if (salesChart) salesChart.destroy();
-        
-        salesChart = new Chart(ctx, {
+        myChart = new Chart(ctx, {
             type: 'line',
             data: {
-                labels: ['Dushanba', 'Seshanba', 'Chorshanba', 'Payshanba', 'Juma', 'Shanba', 'Yakshanba'],
+                labels: labels,
                 datasets: [{
-                    label: 'Kunlik Foyda',
-                    data: [120000, 190000, 30000, 500000, 200000, 300000, 450000],
+                    label: 'Kunlik Savdo Hajmi',
+                    data: data,
                     borderColor: '#6366f1',
                     backgroundColor: 'rgba(99, 102, 241, 0.1)',
                     fill: true,
-                    tension: 0.4
+                    tension: 0.4,
+                    borderWidth: 3,
+                    pointRadius: 5
                 }]
             },
             options: {
-                responsive: true,
-                maintainAspectRatio: false,
                 plugins: { legend: { display: false } },
-                scales: { y: { display: false }, x: { grid: { display: false } } }
+                scales: { y: { beginAtZero: true } }
             }
         });
     }
+
+    // --- DAY CLOSING ---
+    function openZReport() {
+        const content = document.getElementById('z-content');
+        content.innerHTML = `
+            📍 SANA: ${new Date().toLocaleDateString()}<br>
+            💰 UMUMIY KASSA: ${fmt(db.session.kassa)}<br>
+            📈 SOF FOYDA: ${fmt(db.session.profit)}<br>
+            📉 XARAJATLAR: ${fmt(db.session.expense)}<br>
+            🤝 YANGI NASIYALAR: ${db.nasiya.filter(n => n.date === new Date().toLocaleDateString()).length} ta
+        `;
+        document.getElementById('z-modal').style.display = 'flex';
+    }
+
+    function finishDay(mode) {
+        // Save to archive
+        db.days.unshift({
+            date: new Date().toLocaleDateString(),
+            kassa: db.session.kassa,
+            profit: db.session.profit,
+            exp: db.session.expense
+        });
+
+        // Reset Session
+        db.session = { kassa: 0, profit: 0, expense: 0 };
+        db.history = [];
+        db.expenses = [];
+
+        save();
+        closeModal('z-modal');
+        speak("Kun yakunlandi. Xayrli tun.");
+        Swal.fire('Yopildi', 'Kunlik hisobot arxivga saqlandi va kassa tozalandi.', 'success');
+    }
+
+    // --- SYSTEM UTILS ---
+    function save() {
+        localStorage.setItem('galaxy_v20_db', JSON.stringify(db));
+        renderAll();
+    }
+
+    function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+
+    function exportDB() {
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(db));
+        const downloadAnchorNode = document.createElement('a');
+        downloadAnchorNode.setAttribute("href", dataStr);
+        downloadAnchorNode.setAttribute("download", "galaxy_backup_" + new Date().toLocaleDateString() + ".json");
+        document.body.appendChild(downloadAnchorNode);
+        downloadAnchorNode.click();
+        downloadAnchorNode.remove();
+    }
+
+    function setTheme(t) {
+        db.conf.theme = t;
+        save();
+        document.body.className = t;
+    }
+
+    function saveSettings() {
+        db.conf.name = document.getElementById('set-n').value;
+        const newPin = document.getElementById('set-pin').value;
+        if(newPin.length === 4) db.conf.pin = newPin;
+        
+        save();
+        Swal.fire('Saqlandi', 'Tizim sozlamalari yangilandi', 'success');
+    }
+
+    function checkStockAlerts() {
+        const alerts = db.stock.filter(i => i.qty < i.min);
+        const list = document.getElementById('notif-list');
+        list.innerHTML = '';
+        
+        if(alerts.length === 0) {
+            list.innerHTML = '<p style="color:gray">Hamma tovarlar yetarli.</p>';
+            return;
+        }
+
+        alerts.forEach(a => {
+            list.innerHTML += `
+                <div style="padding:15px; background:#fff1f2; border-left:4px solid #ef4444; border-radius:10px; margin-bottom:10px; font-size:0.85rem">
+                    <b style="color:#ef4444">DIQQAT:</b> ${a.name} tugamoqda! (Qoldi: ${a.qty} ta)
+                </div>
+            `;
+        });
+    }
+
+    // --- INITIAL RUN ---
+    // (Login overlay handles the start)
+
 </script>
 </body>
 </html>
